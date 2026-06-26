@@ -38,6 +38,116 @@
       font: inherit;
     }
 
+    body.auth-locked {
+      min-height: 100vh;
+    }
+
+    body.auth-locked .app {
+      display: none;
+    }
+
+    body:not(.auth-locked) .password-gate {
+      display: none;
+    }
+
+    .password-gate {
+      min-height: 100vh;
+      display: grid;
+      place-items: center;
+      padding: 24px;
+      background:
+        radial-gradient(circle at 18% 12%, rgba(120, 150, 141, 0.28), transparent 18rem),
+        radial-gradient(circle at 92% 18%, rgba(169, 101, 114, 0.18), transparent 20rem),
+        linear-gradient(135deg, #eef3f4 0%, #fbfaf7 54%, #e8eff0 100%);
+    }
+
+    .password-card {
+      width: min(420px, 100%);
+      padding: 32px;
+      border: 1px solid rgba(65, 107, 99, 0.18);
+      border-radius: 22px;
+      background: rgba(251, 252, 251, 0.9);
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(16px);
+    }
+
+    .password-kicker {
+      display: inline-flex;
+      align-items: center;
+      min-height: 30px;
+      padding: 4px 12px;
+      border-radius: 999px;
+      color: var(--sage-dark);
+      background: rgba(120, 150, 141, 0.16);
+      font-size: 0.86rem;
+      font-weight: 800;
+    }
+
+    .password-card h1 {
+      margin: 18px 0 8px;
+      font-size: clamp(1.8rem, 7vw, 2.45rem);
+      line-height: 1.1;
+      letter-spacing: 0;
+    }
+
+    .password-card p {
+      margin: 0;
+      color: var(--muted);
+    }
+
+    .password-form {
+      display: grid;
+      gap: 12px;
+      margin-top: 24px;
+    }
+
+    .password-form label {
+      color: var(--ink);
+      font-weight: 800;
+    }
+
+    .password-input {
+      width: 100%;
+      min-height: 52px;
+      padding: 12px 14px;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      color: var(--ink);
+      background: #fff;
+      outline: none;
+    }
+
+    .password-input:focus {
+      border-color: var(--sage);
+      box-shadow: 0 0 0 4px rgba(120, 150, 141, 0.18);
+    }
+
+    .unlock-button {
+      min-height: 52px;
+      border: 0;
+      border-radius: 12px;
+      color: #fff;
+      background: linear-gradient(135deg, var(--sage-dark), var(--clay-dark));
+      font-weight: 900;
+      cursor: pointer;
+    }
+
+    .unlock-button:active {
+      transform: translateY(1px);
+    }
+
+    .password-error {
+      min-height: 1.4em;
+      color: var(--clay-dark);
+      font-size: 0.92rem;
+      font-weight: 800;
+    }
+
+    .password-note {
+      margin-top: 18px !important;
+      font-size: 0.88rem;
+    }
+
     .app {
       min-height: 100vh;
       display: grid;
@@ -1160,7 +1270,22 @@
     }
   </style>
 </head>
-<body>
+<body class="auth-locked">
+  <section class="password-gate" id="passwordGate" aria-label="行程密碼保護">
+    <div class="password-card">
+      <span class="password-kicker">Private itinerary</span>
+      <h1>Paris 2026 Daily Schedule</h1>
+      <p>這是私人家庭行程，請輸入密碼後查看。</p>
+      <form class="password-form" id="passwordForm">
+        <label for="tripPassword">進入密碼</label>
+        <input class="password-input" id="tripPassword" name="tripPassword" type="password" autocomplete="current-password" autocapitalize="characters" spellcheck="false" required />
+        <button class="unlock-button" type="submit">進入行程</button>
+        <div class="password-error" id="passwordError" role="alert" aria-live="polite"></div>
+      </form>
+      <p class="password-note">通過後，這台裝置會記住登入狀態。</p>
+    </div>
+  </section>
+
   <div class="app">
     <aside class="sidebar">
       <div class="brand">
@@ -2030,6 +2155,78 @@
     const pageSubtitle = document.getElementById("pageSubtitle");
     const eventCount = document.getElementById("eventCount");
     const drawer = document.getElementById("expenseDrawer");
+    const accessHash = "4b97f9dbb25b9b8c0847d2c06dda29699dfb25fcd40137a72c216f312dc5cc34";
+    const accessFallbackHash = "5bf818cb";
+    const accessStorageKey = "paris2026ItineraryUnlocked";
+    const passwordGate = document.getElementById("passwordGate");
+    const passwordForm = document.getElementById("passwordForm");
+    const passwordInput = document.getElementById("tripPassword");
+    const passwordError = document.getElementById("passwordError");
+
+    function quickHash(value) {
+      let hash = 2166136261;
+      for (const character of value) {
+        hash ^= character.charCodeAt(0);
+        hash = Math.imul(hash, 16777619);
+      }
+      return (hash >>> 0).toString(16);
+    }
+
+    async function sha256Hex(value) {
+      const bytes = new TextEncoder().encode(value);
+      const buffer = await crypto.subtle.digest("SHA-256", bytes);
+      return Array.from(new Uint8Array(buffer), (byte) => byte.toString(16).padStart(2, "0")).join("");
+    }
+
+    async function passwordMatches(value) {
+      const candidate = value.trim();
+      if (window.crypto && crypto.subtle && window.TextEncoder) {
+        return (await sha256Hex(candidate)) === accessHash;
+      }
+      return quickHash(candidate) === accessFallbackHash;
+    }
+
+    function rememberAccess() {
+      try {
+        localStorage.setItem(accessStorageKey, "yes");
+      } catch (error) {
+        sessionStorage.setItem(accessStorageKey, "yes");
+      }
+    }
+
+    function hasRememberedAccess() {
+      try {
+        return localStorage.getItem(accessStorageKey) === "yes" || sessionStorage.getItem(accessStorageKey) === "yes";
+      } catch (error) {
+        return false;
+      }
+    }
+
+    function unlockItinerary() {
+      document.body.classList.remove("auth-locked");
+      passwordGate.hidden = true;
+      passwordInput.value = "";
+    }
+
+    if (hasRememberedAccess()) {
+      unlockItinerary();
+    } else {
+      window.setTimeout(() => passwordInput.focus(), 200);
+    }
+
+    passwordForm.addEventListener("submit", async (event) => {
+      event.preventDefault();
+      passwordError.textContent = "";
+      const ok = await passwordMatches(passwordInput.value);
+      if (ok) {
+        rememberAccess();
+        unlockItinerary();
+        return;
+      }
+      passwordError.textContent = "密碼不正確，請再試一次。";
+      passwordInput.select();
+    });
+
     const restaurantGuide = {
       day2: [
         { name: "Aldehyde", query: "Aldehyde 5 Rue du Pont Louis-Philippe Paris", rating: "Google 約 4.8", picks: "季節 tasting menu、海鮮或魚料理、甜點", note: "已訂位；米其林一星，菜單會依季節變動。" },
