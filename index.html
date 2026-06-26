@@ -1,0 +1,2592 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Paris 2026 Daily Schedule</title>
+  <style>
+    :root {
+      --ink: #232b32;
+      --muted: #65717a;
+      --paper: #eef3f4;
+      --panel: #fbfcfb;
+      --line: #d9e2e4;
+      --sage: #78968d;
+      --sage-dark: #416b63;
+      --clay: #a96572;
+      --clay-dark: #7f4250;
+      --sand: #9eb6c1;
+      --cream: #fbfaf7;
+      --shadow: 0 22px 55px rgba(41, 64, 76, 0.12);
+    }
+
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      font-family: "Microsoft JhengHei", "PingFang TC", "Noto Sans TC", Arial, sans-serif;
+      color: var(--ink);
+      background:
+        radial-gradient(circle at 8% 0%, rgba(169, 101, 114, 0.10), transparent 24rem),
+        radial-gradient(circle at 96% 8%, rgba(120, 150, 141, 0.16), transparent 28rem),
+        linear-gradient(180deg, #fbfcfb 0%, var(--paper) 100%);
+      font-size: 16px;
+      line-height: 1.55;
+    }
+
+    button, input {
+      font: inherit;
+    }
+
+    .app {
+      min-height: 100vh;
+      display: grid;
+      grid-template-columns: 300px minmax(0, 1fr);
+    }
+
+    .sidebar {
+      position: sticky;
+      top: 0;
+      height: 100vh;
+      padding: 24px 18px;
+      background:
+        linear-gradient(180deg, rgba(47, 43, 38, 0.98), rgba(38, 35, 31, 0.98)),
+        #2c2622;
+      color: #fff;
+      overflow: auto;
+    }
+
+    .brand {
+      margin: 0 0 18px;
+      padding-bottom: 18px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.16);
+    }
+
+    .brand h1 {
+      margin: 0;
+      font-size: 1.35rem;
+      line-height: 1.25;
+    }
+
+    .brand p {
+      margin: 8px 0 0;
+      color: rgba(255, 255, 255, 0.68);
+      font-size: 0.9rem;
+    }
+
+    .menu-label {
+      margin: 18px 0 10px;
+      color: rgba(255, 255, 255, 0.6);
+      font-size: 0.82rem;
+    }
+
+    .day-menu {
+      display: grid;
+      gap: 8px;
+    }
+
+    .day-button {
+      width: 100%;
+      min-height: 54px;
+      display: grid;
+      grid-template-columns: 62px minmax(0, 1fr);
+      gap: 10px;
+      align-items: center;
+      padding: 8px 10px;
+      border: 1px solid rgba(255, 255, 255, 0.13);
+      border-radius: 8px;
+      color: rgba(255, 250, 242, 0.82);
+      background: rgba(255, 250, 242, 0.055);
+      text-align: left;
+      cursor: pointer;
+    }
+
+    .day-button:hover,
+    .day-button.active {
+      border-color: rgba(217, 185, 145, 0.78);
+      background: rgba(217, 185, 145, 0.16);
+      color: #fff;
+    }
+
+    .day-number {
+      display: grid;
+      place-items: center;
+      min-width: 0;
+      height: 38px;
+      border-radius: 8px;
+      background: rgba(255, 255, 255, 0.11);
+      font-weight: 700;
+      font-size: 0.92rem;
+      white-space: nowrap;
+    }
+
+    .day-button.active .day-number {
+      background: var(--sand);
+      color: #1f2a30;
+    }
+
+    .day-name {
+      display: block;
+      font-size: 0.96rem;
+      font-weight: 700;
+      overflow-wrap: anywhere;
+    }
+
+    .day-date {
+      display: block;
+      margin-top: 2px;
+      font-size: 0.78rem;
+      color: rgba(255, 255, 255, 0.58);
+    }
+
+    .side-actions {
+      margin-top: 18px;
+      display: grid;
+      gap: 8px;
+    }
+
+    .utility-button {
+      min-height: 42px;
+      border: 1px solid rgba(255, 255, 255, 0.18);
+      border-radius: 8px;
+      background: transparent;
+      color: rgba(255, 255, 255, 0.88);
+      cursor: pointer;
+    }
+
+    .utility-button:hover {
+      background: rgba(255, 255, 255, 0.1);
+    }
+
+    .content {
+      min-width: 0;
+      padding: 28px;
+    }
+
+    .topbar {
+      display: flex;
+      justify-content: space-between;
+      gap: 18px;
+      align-items: flex-start;
+      margin-bottom: 20px;
+    }
+
+    .topbar h2 {
+      margin: 0;
+      font-size: 1.9rem;
+      line-height: 1.2;
+    }
+
+    .topbar p {
+      margin: 8px 0 0;
+      color: var(--muted);
+    }
+
+    .trip-badges {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      justify-content: flex-end;
+      max-width: 520px;
+    }
+
+    .badge {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: rgba(255, 253, 248, 0.82);
+      padding: 8px 10px;
+      color: var(--ink);
+      font-size: 0.86rem;
+      font-weight: 700;
+      white-space: nowrap;
+    }
+
+    .hero {
+      margin-bottom: 20px;
+    }
+
+    .poster {
+      border: 1px solid rgba(207, 184, 156, 0.72);
+      border-radius: 10px;
+      background:
+        radial-gradient(circle at 100% 0%, rgba(120, 150, 141, 0.13), transparent 26rem),
+        linear-gradient(180deg, rgba(251, 252, 251, 0.98), rgba(243, 247, 247, 0.96)),
+        var(--cream);
+      box-shadow: var(--shadow);
+      overflow: hidden;
+    }
+
+    .poster-top {
+      min-height: 164px;
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 320px;
+      gap: 22px;
+      align-items: end;
+      padding: 30px 34px 18px;
+      border-bottom: 1px solid rgba(231, 217, 199, 0.8);
+    }
+
+    .script-title {
+      margin: 0 0 2px;
+      color: var(--clay);
+      font-family: "Segoe Script", "Brush Script MT", cursive;
+      font-size: 1.45rem;
+      line-height: 1.1;
+    }
+
+    .poster-title {
+      margin: 0;
+      font-size: clamp(2rem, 4.6vw, 4.1rem);
+      line-height: 1.02;
+      letter-spacing: 0;
+      color: #232b32;
+      font-family: Georgia, "Microsoft JhengHei", serif;
+    }
+
+    .poster-subtitle {
+      margin: 8px 0 0;
+      color: var(--muted);
+      font-size: 1.05rem;
+      font-weight: 700;
+    }
+
+    .poster-mosaic {
+      min-height: 132px;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      align-self: stretch;
+    }
+
+    .mosaic-tile {
+      position: relative;
+      overflow: hidden;
+      border-radius: 8px;
+      background:
+        linear-gradient(135deg, rgba(111, 143, 131, 0.92), rgba(63, 111, 102, 0.9)),
+        var(--sage);
+      color: #fffdf8;
+      padding: 12px;
+      display: flex;
+      align-items: end;
+      min-height: 62px;
+    }
+
+    .mosaic-tile:nth-child(2n) {
+      background:
+        linear-gradient(135deg, rgba(184, 115, 99, 0.92), rgba(143, 79, 69, 0.9)),
+        var(--clay);
+    }
+
+    .mosaic-tile::before {
+      content: "";
+      position: absolute;
+      inset: -30% -10% auto auto;
+      width: 120px;
+      height: 120px;
+      border: 2px solid rgba(255, 253, 248, 0.34);
+      border-radius: 50%;
+    }
+
+    .mosaic-tile span {
+      position: relative;
+      font-weight: 800;
+      text-shadow: 0 1px 12px rgba(0, 0, 0, 0.22);
+      overflow-wrap: anywhere;
+    }
+
+    .theme-row {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      padding: 13px 34px;
+      border-bottom: 1px solid rgba(231, 217, 199, 0.8);
+      color: var(--clay-dark);
+      font-weight: 800;
+    }
+
+    .theme-row span {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      white-space: nowrap;
+    }
+
+    .theme-row span + span::before {
+      content: "/";
+      color: #c9a381;
+      margin-right: 2px;
+    }
+
+    .info-strip {
+      display: grid;
+      grid-template-columns: 140px minmax(0, 1fr);
+      margin: 0 34px 22px;
+      border: 1px solid rgba(231, 217, 199, 0.84);
+      border-radius: 8px;
+      overflow: hidden;
+      background: rgba(255, 253, 248, 0.86);
+    }
+
+    .strip-label {
+      display: grid;
+      place-items: center;
+      background: var(--sage);
+      color: #fffdf8;
+      font-weight: 900;
+      min-height: 46px;
+    }
+
+    .strip-content {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      padding: 10px 16px;
+      color: #4f463f;
+      font-weight: 800;
+      overflow-wrap: anywhere;
+    }
+
+    .poster-body {
+      display: grid;
+      grid-template-columns: minmax(440px, 1fr) 330px;
+      gap: 24px;
+      padding: 0 34px 30px;
+    }
+
+    .poster-main {
+      display: block;
+    }
+
+    .poster-timeline {
+      border: 1px solid rgba(231, 217, 199, 0.84);
+      border-radius: 10px;
+      background: rgba(255, 253, 248, 0.92);
+      overflow: hidden;
+    }
+
+    .poster-row {
+      display: grid;
+      grid-template-columns: 78px 54px minmax(0, 1fr);
+      gap: 14px;
+      align-items: start;
+      min-height: 72px;
+      padding: 12px 16px;
+      border-bottom: 1px solid rgba(231, 217, 199, 0.76);
+    }
+
+    .poster-row:last-child {
+      border-bottom: 0;
+    }
+
+    .poster-time {
+      padding-top: 6px;
+      font-weight: 900;
+      color: #2f2a26;
+      white-space: pre-line;
+      font-family: Georgia, "Microsoft JhengHei", serif;
+      font-size: 1.04rem;
+    }
+
+    .poster-icon {
+      width: 42px;
+      height: 42px;
+      margin-top: 2px;
+      display: grid;
+      place-items: center;
+      border-radius: 8px;
+      background: #eef0f1;
+      color: var(--clay-dark);
+      font-weight: 900;
+      font-size: 1.3rem;
+      letter-spacing: 0;
+    }
+
+    .poster-event-title {
+      margin: 0;
+      font-weight: 900;
+      font-size: 1.03rem;
+      overflow-wrap: anywhere;
+      color: #2f2a26;
+    }
+
+    .poster-event-detail {
+      margin: 2px 0 0;
+      color: var(--muted);
+      font-size: 0.9rem;
+      overflow-wrap: anywhere;
+      white-space: pre-line;
+    }
+
+    details.poster-event-detail {
+      cursor: pointer;
+    }
+
+    details.poster-event-detail summary {
+      display: flex;
+      align-items: baseline;
+      gap: 8px;
+      list-style: none;
+      color: var(--muted);
+    }
+
+    details.poster-event-detail summary::-webkit-details-marker {
+      display: none;
+    }
+
+    details.poster-event-detail summary span:first-child {
+      min-width: 0;
+      overflow-wrap: anywhere;
+    }
+
+    details.poster-event-detail p {
+      margin: 8px 0 0;
+      padding: 9px 11px;
+      border-left: 3px solid rgba(120, 150, 141, 0.52);
+      border-radius: 0 8px 8px 0;
+      background: rgba(238, 243, 244, 0.72);
+      color: #4f5c68;
+      line-height: 1.65;
+      white-space: pre-line;
+    }
+
+    .detail-toggle {
+      flex: 0 0 auto;
+      display: inline-flex;
+      align-items: center;
+      min-height: 24px;
+      padding: 0 8px;
+      border: 1px solid rgba(120, 150, 141, 0.36);
+      border-radius: 999px;
+      color: var(--sage-dark);
+      background: rgba(238, 243, 244, 0.92);
+      font-size: 0.75rem;
+      font-weight: 900;
+      line-height: 1;
+    }
+
+    .detail-toggle::before {
+      content: "展開";
+    }
+
+    details[open] .detail-toggle::before {
+      content: "收合";
+    }
+
+    .poster-side {
+      display: grid;
+      gap: 16px;
+      align-content: start;
+    }
+
+    .day-map {
+      grid-column: 1 / -1;
+      border: 1px solid rgba(231, 217, 199, 0.84);
+      border-radius: 10px;
+      background: rgba(255, 253, 248, 0.92);
+      overflow: hidden;
+    }
+
+    .map-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 13px 16px;
+      background: linear-gradient(90deg, rgba(111, 143, 131, 0.18), rgba(184, 115, 99, 0.13));
+      border-bottom: 1px solid rgba(231, 217, 199, 0.84);
+    }
+
+    .map-head h4 {
+      margin: 0;
+      color: #3f3932;
+      font-size: 1.05rem;
+    }
+
+    .map-link {
+      display: inline-flex;
+      align-items: center;
+      min-height: 32px;
+      padding: 0 11px;
+      border: 1px solid rgba(120, 150, 141, 0.42);
+      border-radius: 999px;
+      color: var(--sage-dark);
+      background: rgba(255, 253, 248, 0.82);
+      font-size: 0.82rem;
+      font-weight: 900;
+      text-decoration: none;
+      white-space: nowrap;
+    }
+
+    .map-link:hover {
+      border-color: currentColor;
+      background: rgba(238, 243, 244, 0.96);
+    }
+
+    .route-poster {
+      display: grid;
+      grid-template-columns: minmax(250px, 340px) minmax(0, 1fr);
+      gap: 16px;
+      padding: 16px;
+      background:
+        linear-gradient(90deg, rgba(255, 253, 248, 0.94), rgba(239, 246, 246, 0.92)),
+        #eef3f4;
+    }
+
+    .map-card-list {
+      display: grid;
+      gap: 10px;
+      align-content: start;
+    }
+
+    .map-stop-card {
+      display: grid;
+      grid-template-columns: 32px 72px minmax(0, 1fr);
+      gap: 9px;
+      align-items: center;
+      min-height: 74px;
+      padding: 8px;
+      border: 1px solid rgba(231, 217, 199, 0.84);
+      border-radius: 10px;
+      background: rgba(255, 253, 248, 0.92);
+      box-shadow: 0 8px 18px rgba(23, 32, 42, 0.06);
+    }
+
+    .map-stop-no {
+      display: grid;
+      place-items: center;
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      background: var(--clay);
+      color: #fffdf8;
+      font-weight: 900;
+      font-size: 0.88rem;
+    }
+
+    .map-stop-thumb {
+      position: relative;
+      height: 54px;
+      border-radius: 8px;
+      overflow: hidden;
+      background:
+        linear-gradient(145deg, rgba(65, 107, 99, 0.84), rgba(184, 115, 99, 0.64)),
+        #9eb6c1;
+    }
+
+    .map-stop-thumb::before {
+      content: "";
+      position: absolute;
+      inset: auto -18% -28% -18%;
+      height: 58%;
+      border-radius: 50% 50% 0 0;
+      background: rgba(255, 253, 248, 0.46);
+    }
+
+    .map-stop-thumb::after {
+      content: attr(data-icon);
+      position: absolute;
+      inset: 0;
+      display: grid;
+      place-items: center;
+      color: #fffdf8;
+      font-size: 1.45rem;
+      text-shadow: 0 2px 10px rgba(31, 42, 48, 0.28);
+    }
+
+    .map-stop-title {
+      margin: 0;
+      color: #2f2a26;
+      font-size: 0.93rem;
+      font-weight: 900;
+      line-height: 1.25;
+      overflow-wrap: anywhere;
+    }
+
+    .map-stop-meta {
+      margin: 4px 0 0;
+      color: #6a7683;
+      font-size: 0.76rem;
+      font-weight: 800;
+      line-height: 1.35;
+    }
+
+    .map-live {
+      position: relative;
+      min-height: clamp(420px, 44vw, 620px);
+      border: 1px solid rgba(143, 170, 174, 0.55);
+      border-radius: 12px;
+      overflow: hidden;
+      background: #dbe7e8;
+    }
+
+    .map-live iframe {
+      width: 100%;
+      height: 100%;
+      min-height: inherit;
+      border: 0;
+      display: block;
+    }
+
+    .side-box {
+      border: 1px solid rgba(231, 217, 199, 0.84);
+      border-radius: 10px;
+      background: rgba(255, 253, 248, 0.9);
+      overflow: hidden;
+    }
+
+    .side-box h4 {
+      margin: 0;
+      padding: 13px 16px;
+      background: linear-gradient(90deg, rgba(111, 143, 131, 0.18), rgba(184, 115, 99, 0.13));
+      color: #3f3932;
+      text-align: left;
+      font-size: 1.05rem;
+      border-bottom: 1px solid rgba(231, 217, 199, 0.84);
+    }
+
+    .side-box ul {
+      margin: 0;
+      padding: 14px 16px 16px;
+      list-style: none;
+      display: grid;
+      gap: 10px;
+    }
+
+    .side-box li {
+      color: var(--muted);
+      border-bottom: 1px solid rgba(240, 230, 216, 0.92);
+      padding-bottom: 11px;
+      overflow-wrap: anywhere;
+      white-space: pre-line;
+    }
+
+    .side-box li:last-child {
+      border-bottom: 0;
+      padding-bottom: 0;
+    }
+
+    .side-box b {
+      display: block;
+      color: #2f2a26;
+      margin-bottom: 2px;
+      white-space: normal;
+    }
+
+    .restaurant-li {
+      padding-bottom: 0;
+      white-space: normal;
+    }
+
+    .restaurant-card {
+      color: var(--muted);
+    }
+
+    .restaurant-card summary {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 5px 10px;
+      align-items: center;
+      list-style: none;
+      cursor: pointer;
+    }
+
+    .restaurant-card summary::-webkit-details-marker {
+      display: none;
+    }
+
+    .restaurant-name {
+      min-width: 0;
+      color: #2f2a26;
+      font-weight: 900;
+      line-height: 1.25;
+      overflow-wrap: anywhere;
+    }
+
+    .restaurant-name a {
+      color: inherit;
+      text-decoration: none;
+      border-bottom: 1px solid rgba(120, 150, 141, 0.45);
+    }
+
+    .restaurant-name a:hover {
+      color: var(--sage-dark);
+      border-bottom-color: currentColor;
+    }
+
+    .restaurant-rating {
+      display: inline-flex;
+      align-items: center;
+      min-height: 24px;
+      padding: 0 8px;
+      border-radius: 999px;
+      background: rgba(238, 243, 244, 0.9);
+      color: var(--sage-dark);
+      font-size: 0.76rem;
+      font-weight: 900;
+      white-space: nowrap;
+    }
+
+    .restaurant-pick {
+      grid-column: 1 / -1;
+      font-size: 0.88rem;
+      line-height: 1.5;
+    }
+
+    .restaurant-more {
+      margin: 8px 0 0;
+      padding: 9px 11px;
+      border-left: 3px solid rgba(120, 150, 141, 0.52);
+      border-radius: 0 8px 8px 0;
+      background: rgba(238, 243, 244, 0.72);
+      color: #4f5c68;
+      font-size: 0.86rem;
+      line-height: 1.65;
+    }
+
+    .restaurant-more span {
+      display: block;
+    }
+
+    .restaurant-more b {
+      display: inline;
+      margin: 0;
+      color: #2f2a26;
+    }
+
+    .summary-panel,
+    .panel {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: rgba(255, 255, 255, 0.9);
+      box-shadow: 0 10px 30px rgba(23, 32, 42, 0.07);
+    }
+
+    .summary-panel {
+      padding: 18px;
+      display: grid;
+      align-content: start;
+      gap: 14px;
+    }
+
+    .eyebrow {
+      margin: 0;
+      color: var(--sage-dark);
+      font-size: 0.82rem;
+      font-weight: 800;
+    }
+
+    .summary-panel h3,
+    .panel h3 {
+      margin: 0;
+      font-size: 1.3rem;
+      line-height: 1.25;
+    }
+
+    .summary-text {
+      margin: 0;
+      color: var(--muted);
+    }
+
+    .meta-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 10px;
+    }
+
+    .meta {
+      min-height: 74px;
+      border: 1px solid #e7dfd2;
+      border-radius: 8px;
+      padding: 10px;
+      background: #fffaf0;
+    }
+
+    .meta b {
+      display: block;
+      color: var(--ink);
+      margin-bottom: 4px;
+      font-size: 0.92rem;
+    }
+
+    .meta span {
+      color: var(--muted);
+      font-size: 0.9rem;
+    }
+
+    .layout {
+      display: none;
+      grid-template-columns: minmax(0, 1fr) 350px;
+      gap: 18px;
+      align-items: start;
+    }
+
+    .main-column,
+    .side-column {
+      display: grid;
+      gap: 18px;
+    }
+
+    .panel {
+      padding: 18px;
+    }
+
+    .panel-head {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      align-items: center;
+      margin-bottom: 14px;
+    }
+
+    .count-pill {
+      flex: 0 0 auto;
+      border-radius: 8px;
+      padding: 5px 9px;
+      background: #edf3f2;
+      color: var(--sage-dark);
+      font-size: 0.82rem;
+      font-weight: 800;
+    }
+
+    .timeline {
+      display: grid;
+      gap: 10px;
+    }
+
+    .timeline-item {
+      display: grid;
+      grid-template-columns: 118px minmax(0, 1fr);
+      gap: 12px;
+      padding: 14px;
+      border: 1px solid #e7dfd2;
+      border-radius: 8px;
+      background: #fff;
+    }
+
+    .time {
+      min-height: 36px;
+      align-self: start;
+      border-radius: 8px;
+      padding: 8px 9px;
+      background: #eef0f1;
+      color: var(--clay-dark);
+      font-weight: 800;
+      text-align: center;
+      overflow-wrap: anywhere;
+    }
+
+    .event-title {
+      margin: 0 0 5px;
+      font-weight: 800;
+      font-size: 1.04rem;
+      overflow-wrap: anywhere;
+    }
+
+    .event-detail {
+      margin: 0;
+      color: var(--muted);
+      overflow-wrap: anywhere;
+      white-space: pre-line;
+    }
+
+    .tag {
+      display: inline-block;
+      margin-top: 9px;
+      padding: 4px 8px;
+      border-radius: 8px;
+      background: #fef3c7;
+      color: #92400e;
+      font-size: 0.8rem;
+      font-weight: 800;
+    }
+
+    .list {
+      margin: 0;
+      padding: 0;
+      list-style: none;
+      display: grid;
+      gap: 9px;
+    }
+
+    .list li {
+      border-left: 4px solid var(--sage);
+      padding: 9px 10px;
+      border-radius: 0 8px 8px 0;
+      background: #f7faf9;
+      color: #4a5960;
+      overflow-wrap: anywhere;
+    }
+
+    .list li.warn {
+      border-color: var(--clay);
+      background: #f8eef0;
+    }
+
+    .list li.cost {
+      border-color: var(--sage);
+      background: #edf3f2;
+    }
+
+    .expense-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 12px;
+    }
+
+    .expense-card {
+      min-height: 110px;
+      border: 1px solid #e5e7eb;
+      border-radius: 8px;
+      background: #fff;
+      padding: 14px;
+    }
+
+    .expense-card strong {
+      display: block;
+      font-size: 1.25rem;
+      margin-bottom: 4px;
+      color: var(--ink);
+      overflow-wrap: anywhere;
+    }
+
+    .expense-card span {
+      color: var(--muted);
+      font-size: 0.9rem;
+    }
+
+    .drawer {
+      display: none;
+      margin-bottom: 20px;
+    }
+
+    .drawer.open {
+      display: block;
+    }
+
+    .footer-note {
+      margin: 22px 0 0;
+      color: var(--muted);
+      font-size: 0.86rem;
+      text-align: center;
+    }
+
+    @media (max-width: 1120px) {
+      .app {
+        grid-template-columns: 1fr;
+      }
+
+      .sidebar {
+        position: sticky;
+        height: auto;
+        z-index: 10;
+        padding: 14px 14px 12px;
+      }
+
+      .brand {
+        margin-bottom: 10px;
+        padding-bottom: 10px;
+      }
+
+      .brand h1 {
+        font-size: 1.1rem;
+      }
+
+      .day-menu {
+        grid-auto-flow: column;
+        grid-auto-columns: 182px;
+        overflow-x: auto;
+        padding-bottom: 4px;
+      }
+
+      .day-button {
+        grid-template-columns: 56px minmax(0, 1fr);
+      }
+
+      .side-actions {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
+      .content {
+        padding: 20px;
+      }
+
+      .hero,
+      .layout {
+        grid-template-columns: 1fr;
+      }
+
+      .poster-top,
+      .poster-body,
+      .poster-main {
+        grid-template-columns: 1fr;
+      }
+
+      .poster-body {
+        padding: 0 18px 20px;
+      }
+
+      .poster-top {
+        padding: 22px 18px 14px;
+      }
+
+      .theme-row {
+        padding: 10px 18px;
+      }
+
+      .info-strip {
+        margin: 0 18px 16px;
+      }
+
+      .route-poster {
+        grid-template-columns: 1fr;
+      }
+
+      .map-live {
+        min-height: 460px;
+      }
+    }
+
+    @media (max-width: 720px) {
+      .content {
+        padding: 14px;
+      }
+
+      .topbar {
+        display: grid;
+      }
+
+      .trip-badges {
+        justify-content: flex-start;
+      }
+
+      .poster-row {
+        grid-template-columns: 72px 46px minmax(0, 1fr);
+        gap: 8px;
+      }
+
+      .poster-time {
+        font-size: 0.86rem;
+      }
+
+      .poster-title {
+        font-size: 2.15rem;
+      }
+
+      .poster-mosaic {
+        grid-template-columns: 1fr;
+      }
+
+      .info-strip {
+        grid-template-columns: 1fr;
+      }
+
+      .map-head {
+        display: grid;
+        align-items: start;
+      }
+
+      .map-link {
+        justify-self: start;
+      }
+
+      .route-poster {
+        padding: 12px;
+      }
+
+      .map-stop-card {
+        grid-template-columns: 30px 60px minmax(0, 1fr);
+      }
+
+      .map-stop-thumb {
+        height: 48px;
+      }
+
+      .map-live {
+        min-height: 390px;
+      }
+
+      .strip-content {
+        display: grid;
+        gap: 6px;
+      }
+
+      .meta-grid,
+      .expense-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .timeline-item {
+        grid-template-columns: 1fr;
+      }
+
+      .time {
+        text-align: left;
+      }
+    }
+
+    @media print {
+      body {
+        background: #fff;
+      }
+
+      .sidebar,
+      .side-actions,
+      .drawer {
+        display: none;
+      }
+
+      .app,
+      .hero,
+      .layout {
+        display: none;
+      }
+
+      .content {
+        padding: 0;
+      }
+
+      .panel,
+      .summary-panel,
+      .timeline-item,
+      .expense-card {
+        box-shadow: none;
+        break-inside: avoid;
+      }
+
+      .poster {
+        box-shadow: none;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <aside class="sidebar">
+      <div class="brand">
+        <h1>Paris 2026 Daily Schedule</h1>
+        <p>7 人家庭旅行｜巴黎、西北法、羅亞爾河谷</p>
+      </div>
+      <div class="menu-label">日期選單</div>
+      <nav class="day-menu" id="dayMenu" aria-label="每日行程"></nav>
+      <div class="side-actions">
+        <button class="utility-button" id="expenseToggle" type="button">費用總覽</button>
+        <button class="utility-button" id="printButton" type="button">列印 / 存 PDF</button>
+      </div>
+    </aside>
+
+    <main class="content">
+      <section class="topbar">
+        <div>
+          <h2 id="pageTitle">每日行程</h2>
+          <p id="pageSubtitle">選一天查看時間軸、餐廳、費用和提醒。</p>
+        </div>
+        <div class="trip-badges" aria-label="行程摘要">
+          <span class="badge">11 天行程</span>
+          <span class="badge">7 人分攤</span>
+          <span class="badge">包車 4 天 3 夜</span>
+          <span class="badge">離線圖片版</span>
+        </div>
+      </section>
+
+      <section class="drawer" id="expenseDrawer">
+        <div class="panel">
+          <div class="panel-head">
+            <h3>費用總覽</h3>
+            <span class="count-pill">依 Excel 費用頁整理</span>
+          </div>
+          <div class="expense-grid">
+            <div class="expense-card"><strong>€4,205</strong><span>已列歐元大項：導覽、門票、接機、4 天包車、部分城堡門票。</span></div>
+            <div class="expense-card"><strong>€425 / 人</strong><span>接機 €195 + 包車 €2,780，7 人均攤。</span></div>
+            <div class="expense-card"><strong>€1,789.71</strong><span>Alan 家與 Sam 家各自分攤：導覽/門票 + 包車 + 舍濃梭堡/修道院。</span></div>
+            <div class="expense-card"><strong>€625.57</strong><span>Ivy 分攤：導覽/門票 + 包車 + 舍濃梭堡/修道院。</span></div>
+            <div class="expense-card"><strong>TWD 6,494 / 人</strong><span>Ducasse sur Seine 刷卡總額 TWD 45,455，7 人均攤。</span></div>
+            <div class="expense-card"><strong>待補</strong><span>Madame Brasserie €495.6、Giverny 門票、7/11 送機、地鐵/計程車與多數餐費。</span></div>
+          </div>
+        </div>
+      </section>
+
+      <section class="hero" id="hero"></section>
+      <section class="layout">
+        <div class="main-column">
+          <section class="panel">
+            <div class="panel-head">
+              <h3>時間軸</h3>
+              <span class="count-pill" id="eventCount">0 stops</span>
+            </div>
+            <div class="timeline" id="timeline"></div>
+          </section>
+        </div>
+        <aside class="side-column">
+          <section class="panel">
+            <div class="panel-head">
+              <h3>餐廳與採購</h3>
+              <span class="count-pill">food</span>
+            </div>
+            <ul class="list" id="foodList"></ul>
+          </section>
+          <section class="panel">
+            <div class="panel-head">
+              <h3>費用 / 訂位</h3>
+              <span class="count-pill">money</span>
+            </div>
+            <ul class="list" id="costList"></ul>
+          </section>
+          <section class="panel">
+            <div class="panel-head">
+              <h3>提醒</h3>
+              <span class="count-pill">note</span>
+            </div>
+            <ul class="list" id="alertList"></ul>
+          </section>
+        </aside>
+      </section>
+      <p class="footer-note">Source: Paris_20260701-0712_Daily Schedule_V1.xlsx｜Generated as a local HTML itinerary.</p>
+    </main>
+  </div>
+
+  <script id="scheduleData" type="application/json">
+  {
+  "days": [
+    {
+      "id": "day1",
+      "day": "Day 1",
+      "date": "7/1",
+      "weekday": "週三",
+      "title": "深夜出發",
+      "subtitle": "TPE to CDG｜解鎖花都巴黎的序曲",
+      "image": "assets/day-01.png",
+      "stay": "機上",
+      "route": "台北 TPE → 巴黎 CDG",
+      "pace": "輕鬆",
+      "events": [
+        {
+          "time": "20:30",
+          "title": "長榮櫃台集合",
+          "detail": "辦理登機手續及行李托運。",
+          "tag": "TPE",
+          "fullDetail": "時間：20:30\n行程項目：Check In\n長榮櫃台集合, 辦理登機手續及行李托運"
+        },
+        {
+          "time": "23:30",
+          "title": "BR087 起飛",
+          "detail": "搭乘長榮 BR087 前往巴黎。",
+          "tag": "flight",
+          "fullDetail": "時間：23:30\n行程項目：TPE➔ CDG\n搭乘長榮BR087班機起飛前往巴黎"
+        }
+      ],
+      "food": [
+        "機場或機上簡餐為主。"
+      ],
+      "costs": [
+        "表格未列當日新增費用。"
+      ],
+      "alerts": [
+        "Excel 內寫 7/1 星期四；2026/7/1 實際是星期三，建議表格日期欄修正。"
+      ]
+    },
+    {
+      "id": "day2",
+      "day": "Day 2",
+      "date": "7/2",
+      "weekday": "週四",
+      "title": "抵達巴黎",
+      "subtitle": "CDG、voco Paris、Aldehyde、瑪黑區、Bistrotters",
+      "image": "assets/day-02.png",
+      "stay": "voco Paris Montparnasse",
+      "route": "CDG → voco → Marais → 14 區",
+      "pace": "中等偏滿",
+      "events": [
+        {
+          "time": "08:30",
+          "title": "班機抵達與通關",
+          "detail": "CDG 抵達，通過 EES 自動通關並提領行李。",
+          "tag": "airport",
+          "fullDetail": "時間：08:30\n行程項目：班機抵達 & \n巴黎通關\n長途班機抵達戴高樂機場（CDG）\n通過 EES 自動通關並提領行李。"
+        },
+        {
+          "time": "10:00",
+          "title": "機場接送到飯店",
+          "detail": "搭乘預訂 7 人座包車前往左岸 voco Paris，CDG 進城順暢約 40 分鐘，建議抓 50-75 分鐘。",
+          "tag": "transfer",
+          "fullDetail": "時間：10:00 - 10:30\n行程項目：機場接送 ➔ 飯店\n搭乘預定好的 7 人座包車，直接前往左岸 voco Paris"
+        },
+        {
+          "time": "10:30",
+          "title": "寄放行李",
+          "detail": "在飯店稍作休息，整理午餐前的隨身物。",
+          "tag": "hotel",
+          "fullDetail": "時間：10:30 - 11:20\n行程項目：Check-in\n寄放行李,在飯店稍作休息"
+        },
+        {
+          "time": "11:20",
+          "title": "飯店前往 Aldehyde",
+          "detail": "車程順暢約 12 分鐘，市區移動建議抓 20-30 分鐘；5 Rue du Pont Louis-Philippe，已訂位 7 人。",
+          "tag": "move",
+          "fullDetail": "時間：11:20 - 12:20\n行程項目：飯店➔ 餐廳\nAldehyde (已訂位/7人)\n5 Rue du Pont Louis-Philippe, 75004 Paris, 法國\n\nAldéhyde 是一家位於巴黎第四區（瑪黑區附近）的米其林一星法式餐廳。該餐廳由主廚Youssef Marzouk\n掌舵，最大的特色在於將傳統法式精緻料理與北非突尼西亞的溫暖辛香風味完美融合。\n餐廳名稱「Aldéhyde」靈感來自香菜中的芳香分子，象徵主廚獨特且具標誌性的烹飪風格。\n餐廳核心特色背景融合：主廚 Marzouk 最初學習化學，後來轉戰餐飲界，曾在巴黎麗池酒店（Ritz）和 Cheval Blanc 等頂級名店歷練。\n他將化學的精準度與家族的突尼西亞飲食記憶結合，創作出極具層次的盲盒無菜單料理（Blind Tasting Menu）。招牌菜色：餐廳以極佳 savings、調味與創意著稱，\n代表性料理包括**「兩種做法的羔羊肉」（Lamb Two Ways）**、薑黃奶油白醬鱈魚，以及致敬主廚祖父的「After Eight 風味薄荷巧克力」甜點\n備註：搭車 / 步行至餐廳\n\n2024年底開幕\n2025-2026\n連續兩年米其林一星\nGoogle 4.9顆星(420)"
+        },
+        {
+          "time": "12:30",
+          "title": "Aldehyde 午餐",
+          "detail": "米其林一星現代法式料理，作為抵達巴黎的第一餐。",
+          "tag": "lunch",
+          "fullDetail": "時間：11:20 - 12:20\n行程項目：飯店➔ 餐廳\nAldehyde (已訂位/7人)\n5 Rue du Pont Louis-Philippe, 75004 Paris, 法國\n\nAldéhyde 是一家位於巴黎第四區（瑪黑區附近）的米其林一星法式餐廳。該餐廳由主廚Youssef Marzouk\n掌舵，最大的特色在於將傳統法式精緻料理與北非突尼西亞的溫暖辛香風味完美融合。\n餐廳名稱「Aldéhyde」靈感來自香菜中的芳香分子，象徵主廚獨特且具標誌性的烹飪風格。\n餐廳核心特色背景融合：主廚 Marzouk 最初學習化學，後來轉戰餐飲界，曾在巴黎麗池酒店（Ritz）和 Cheval Blanc 等頂級名店歷練。\n他將化學的精準度與家族的突尼西亞飲食記憶結合，創作出極具層次的盲盒無菜單料理（Blind Tasting Menu）。招牌菜色：餐廳以極佳 savings、調味與創意著稱，\n代表性料理包括**「兩種做法的羔羊肉」（Lamb Two Ways）**、薑黃奶油白醬鱈魚，以及致敬主廚祖父的「After Eight 風味薄荷巧克力」甜點\n備註：搭車 / 步行至餐廳\n\n2024年底開幕\n2025-2026\n連續兩年米其林一星\nGoogle 4.9顆星(420)\n\n時間：12:30 - 14:00\n行程項目：🍴 午餐\n在採光最好的黃金正午，品嚐精緻現代主廚功夫菜，優雅拉開法國旅遊序幕。"
+        },
+        {
+          "time": "14:00",
+          "title": "瑪黑區歷史漫步",
+          "detail": "Merci、A L'O Paris、孚日廣場、Une Glace à Paris、La Glacerie Paris、Mariage Frères 可彈性選擇。",
+          "tag": "walk",
+          "fullDetail": "時間：14:00 - 17:30\n行程項目：瑪黑區歷史漫步\n原地慢逛充滿文藝氣息的瑪黑區。可逛 Merci & A L'O Paris (選物)選物店、走訪孚日廣場, 中途去Une Glace à Paris (靠近瑪黑兄弟茶館) 或La Glacerie Paris 吃法式冰淇淋 或者Pozzetto 吃個義式冰淇淋\n下午茶：Mariage Frères\n瑪黑兄弟茶館總店 \n30 Rue du Bourg Tibourg, 75004 Paris, 法國\n備註：Homer Lobster 4.3顆星(3,538)\\\n\nUne Glace à Paris (MOF)\n15 Rue Sainte-Croix de la Bretonnerie, 75004 Paris, 法國\n\nLa Glacerie Paris ( MOF)\n13 Rue du Temple, 75004 Paris, 法國\n\nMariage Frères（瑪黑兄弟茶館）\n位於巴黎瑪黑區（Le Marais）的總店，是創立於 1854 年的法國國寶級百年茶牌發源地。這家總店不僅是買茶的零售鋪，更集結了茶沙龍（Salon de Thé）、茶料理餐廳、以及地下室的茶博物館，是前往巴黎瑪黑區不可錯過的經典地標。總店核心特色與體驗古典茶沙龍 (Salon de Thé)：室內裝潢充滿 19 世紀復古殖民地風情，木質調櫃檯與整面牆的黑色經典茶罐非常壯觀。侍茶師皆著白色西裝，提供優雅的法式倒茶服務。\n\n世界級藏茶量：店內常備來自全球 36 個國家、超過 600 至 800 種的調配茶與單一產區茶。茶香餐點與下午茶：餐廳將茶葉元素融入精緻料理中（如抹茶鮭魚、茶香甜點）。隱藏版茶博物館：總店地下室設有小型博物館（免費參觀），陳列著古老的茶具、茶箱與世界各地的茶文化歷史文物。\n備註：Homer Lobster 4.3顆星(3,538)"
+        },
+        {
+          "time": "19:15",
+          "title": "Bistrotters 晚餐",
+          "detail": "9 Rue Decrès，14 區法式小酒館。",
+          "tag": "dinner",
+          "fullDetail": "時間：19:15-21:00\n行程項目：🍴 晚餐\nBistrotters\n9 Rue Decrès, 75014 Paris, 法國\nBistrotters 是位於巴黎第 14 區（蒙帕納斯 Montparnasse / Plaisance 地區）的一家備受讚譽的法式小酒館。該餐廳自 2012 年開業以來，因其結合傳統法式技法與國際風味的創意料理，獲得了 米其林指南 (Michelin Guide) 的推薦。餐廳特色與氛圍美食風格：主廚 Clément Guegan 強調「100% 手作」，所有高湯、醬汁均從零開始熬製。菜單融合了法式經典與主廚旅行帶來的靈感，風格創新且精緻。餐廳採用季節性菜單，大約每月更換一次\n備註：Bistrotters 4.7顆星\n(1,893)€39/47\n2023 年：Bistrotters 首次獲得米其林「必比登推介」（Bib Gourmand）。\n2024 年至 2026 年：該餐廳持續被列入米其林的推薦名單中"
+        }
+      ],
+      "food": [
+        "Aldehyde：已訂位，米其林一星。",
+        "Mariage Frères：瑪黑兄弟茶館總店，可做下午茶或採購。",
+        "Bistrotters：晚餐，表格列 €39/47。"
+      ],
+      "costs": [
+        "接機費用列在費用頁：€195，與 4 天包車合併 7 人均攤。",
+        "Bistrotters 餐費未放入分攤總表。"
+      ],
+      "alerts": [
+        "長途飛行抵達後直接米其林午餐，建議保留計程車移動，不要硬走太多路。"
+      ]
+    },
+    {
+      "id": "day3",
+      "day": "Day 3",
+      "date": "7/3",
+      "weekday": "週五",
+      "title": "凡爾賽與沙特爾",
+      "subtitle": "巴黎出發，開啟西北法與羅亞爾河谷 4 天 3 夜",
+      "image": "assets/day-03.png",
+      "stay": "Hilton Garden Inn Tours Centre",
+      "route": "Paris → Versailles → Chartres → Tours",
+      "pace": "滿",
+      "events": [
+        {
+          "time": "09:00",
+          "title": "巴黎出發",
+          "detail": "飯店出發前往凡爾賽宮，順暢約 30 分鐘，建議抓 45-60 分鐘。",
+          "tag": "drive",
+          "fullDetail": "時間：09:00\n行程項目：巴黎出發 ➔凡爾賽宮\n車程約60-80分鐘\n飯店附近早餐選擇\nMcDonalds /Starbucks/ Eric ,Kayser\n- Gare de Montparnasse"
+        },
+        {
+          "time": "10:30",
+          "title": "凡爾賽宮",
+          "detail": "12:00 導覽預約，整體停留約 3.5-4 小時。",
+          "tag": "palace",
+          "fullDetail": "時間：10:30 - 14:30\n行程項目：參觀凡爾賽宮\nChâteau de Versailles\nhttps://en.chateauversailles.fr\n/2026-ticketing\n------------------------------------------\n預約PM1200導覽參觀【凡爾賽宮】，欣賞金碧輝煌的法式宮殿與皇家園林。\n預計停留3.5-4小時\n\n凡爾賽宮（Château de Versailles）位於巴黎西南方約 20 公里處，是歐洲歷代宮廷建築的極致巔峰，並於 1979 年被聯合國教科文組織列為世界文化遺產。\n它原本只是法王路易十三的一座奢華狩獵小屋，直到 1682 年，被稱為「太陽王」的路易十四為了遠離\n巴黎的政治動盪，傾盡舉國財力將其擴建為極盡奢華的巴洛克式帝國中心，並將政府遷移至此辦公。\n三大核心參觀區域整座凡爾賽宮佔地超過 800 公頃，規模極其宏大，主要分為以下三大區塊：\n1. 凡爾賽宮主宮殿（The Palace）鏡廳（Hall of Mirrors）： 凡爾賽宮最璀璨的珍珠。這條長達 73 公尺的奢華長廊，一面朝向花園，另一面由 357 面鏡子組成，天花板畫滿了路易十四的豐功偉業。\n這裡不僅是當年皇家舞會與接見外賓的重地，也是 1919 年一戰結束時簽訂《凡爾賽條約》的歷史\n見證地。\n國王與王后大套房（State Apartments）： 以希臘神話諸神（如阿波羅、維納斯）命名的廳室，金碧輝煌的壁畫、大理石雕刻與厚重的金箔裝飾，展現了法蘭西王權的絕對威嚴。\n\n皇家教堂與戰爭畫廊： 擁有壯麗拱頂與金色管風琴的教堂，以及展示法國歷史重大戰役巨幅油畫的長廊。\n2. 凡爾賽花園（The Gardens）由傳奇景觀設計師安德烈·勒諾特爾（André Le Nôtre）打造的經典法式幾何造景花園。佔地高達 250 英畝，中軸線對稱完美，\n園內遍布精美的希臘神話雕像、噴泉與十字大運河。\n\n3. 特里亞農離宮與王后農莊（The Trianon Estate）大特里亞農宮： 路易十四為了逃避繁雜宮廷禮節、與情婦幽會而建的粉紅色大理石別墅。小特里亞農宮與王后農莊： 著名的瑪麗·安東妮（Marie-Antoinette）皇后的私人樂園。她在此建造了一座遠離塵囂的虛擬「茅草鄉村農庄」，包含水車、磨坊與牧場，用以體驗純樸的田園生活。"
+        },
+        {
+          "time": "14:30",
+          "title": "前往沙特爾",
+          "detail": "凡爾賽宮到沙特爾，順暢約 65 分鐘，建議抓 75-90 分鐘。",
+          "tag": "drive",
+          "fullDetail": "時間：14:30 - 16:00\n行程項目：凡爾賽宮➔\n沙特爾Chartres\n至沙特爾車程約80分鐘"
+        },
+        {
+          "time": "16:00",
+          "title": "沙特爾主教座堂散步",
+          "detail": "參觀彩繪玻璃與老城，短停 1 小時。",
+          "tag": "cathedral",
+          "fullDetail": "時間：16:00 - 17:00\n行程項目：沙特爾Chartres\n散步\n參觀著名的國寶級【沙特爾主教座堂】，欣賞絕美藍色彩繪玻璃並在鎮上散步。\n備註：若肚子餓可買\nQuick Burger / 經典Giant 漢堡"
+        },
+        {
+          "time": "17:00",
+          "title": "沙特爾前往 Tours",
+          "detail": "車程約 2 小時 10 分鐘，建議抓 2 小時 15 分-2 小時 30 分；抵達 Hilton Garden Inn Tours Centre，辦理入住。",
+          "tag": "hotel",
+          "fullDetail": "時間：17:00 - 19:00\n行程項目：沙特爾➔\n圖爾 Tours\nChick-in\nHilton Garden Inn Tours Centre"
+        },
+        {
+          "time": "20:00",
+          "title": "Case 晚餐",
+          "detail": "37 Rue Etienne Marcel，已訂位 20:00，表格列 €46/3 道。",
+          "tag": "dinner",
+          "fullDetail": "時間：20:00-21:30\n行程項目：🍴 晚餐\nCase ( 46Euro/ 3道) \nGoogle 4.7顆星(611)\n37 Rue Etienne Marcel, 37000 Tours, 法國\n( 已訂位PM0800)\n\n餐廳是在 2024 年 獲得米其林指南（MICHELIN Guide）認證，並被評選為傑出的新開幕餐廳，選址於一棟 15 世紀的歷史建築內，提供創意法式小酒館料理以「產地到餐桌」（Farm-to-table）為核心， 選用精選的當地時令食材\n核心招牌菜色\n鴨胸料理 (Canard / Duck Breast)： 鴨胸是該餐廳最受歡迎的主菜之一。\n羊肉料理 (Lamb / Souris d'agneau)： 餐廳常態性提供羊肉主菜，如「蜜汁烤羊膝 (Souris d'agneau Rôti Au Miel)」或「羊鞍配封存羊肩。\n蘭姆巴巴 (Baba Au Rhum)： 這是該餐廳指標性的傳統法式甜點，從開店初期至今一直出現在菜單亮點中。\n備註：備案\nLA DEUVALIERE ( 43/2道 or 49/3道 or 63 Euro)\nGoogle 4.6顆星(773)\n18 Rue de la Monnaie, 37000 Tours, 法國"
+        }
+      ],
+      "food": [
+        "早餐備案：McDonald's、Starbucks、Eric Kayser。",
+        "沙特爾若餓可買 Quick Burger。",
+        "Case：已訂位，備案 LA DEUVALIERE。"
+      ],
+      "costs": [
+        "凡爾賽導覽 €230 + 門票 €35 x 5 = €405，Sam 已付現金。",
+        "導覽與羅浮宮導覽一起計入分攤。"
+      ],
+      "alerts": [
+        "當天移動與景點密度高；凡爾賽結束後不要再加點。"
+      ]
+    },
+    {
+      "id": "day4",
+      "day": "Day 4",
+      "date": "7/4",
+      "weekday": "週六",
+      "title": "羅亞爾河谷到聖馬洛",
+      "subtitle": "舍濃梭堡、雷恩、聖馬洛古城",
+      "image": "assets/day-04.png",
+      "stay": "Hôtel Mercure Saint-Malo Front de Mer",
+      "route": "Tours → Chenonceau → Rennes → Saint-Malo",
+      "pace": "中等偏滿",
+      "events": [
+        {
+          "time": "早餐",
+          "title": "Tours 早餐彈性選擇",
+          "detail": "飯店 Babette、Boulangerie de la Scellerie 或 McDonald's。",
+          "tag": "breakfast",
+          "fullDetail": "時間：7/4/2026\n星期六\n行程項目：早餐\n早晨可依據當天行程節奏與天氣,彈性選擇以下方案:\n1.飯店自助早餐 (Babette 餐廳)\n2.傳統法式烘焙坊 (Boulangerie de la Scellerie): \n   4.7顆星(246)·€1-10 步行約 6-7 分鐘。圖爾當地極\n  具人氣的傳統排隊名店, 其可頌(Croissant)與巧克力\n  麵包奶油香氣濃郁、外皮酥脆。單個麵包僅約\n  €1.2 -  €2.5,買完可至隔壁咖啡館配杯黑咖啡,體驗道\n  地法式日常。\n3.McDonald's"
+        },
+        {
+          "time": "08:40",
+          "title": "圖爾出發",
+          "detail": "前往舍濃梭堡，車程約 50 分鐘。",
+          "tag": "drive",
+          "fullDetail": "時間：08:40\n圖爾出發\n行程項目：圖爾➔ 舍濃梭堡\n由圖爾出發，展開羅亞爾河與布列塔尼跨區之旅。\n至舍濃梭堡Château de Chenoncea車程約50分鐘"
+        },
+        {
+          "time": "10:00",
+          "title": "舍濃梭堡",
+          "detail": "水上城堡參觀，表格規劃 10:00-12:00。",
+          "tag": "chateau",
+          "fullDetail": "時間：10:00-1200\n舍濃梭堡\n行程項目：參觀舍濃梭堡\n參觀橫跨在謝爾河上的優雅水上城堡——【雪濃梭堡】，充滿女性歷史色彩的精緻城堡。\n舍農索是法國安德爾-盧瓦爾省的一個市鎮，位於該省東部，謝爾河右岸，屬於都爾區。舍農索因境內的同名城堡而聞名，該城堡屬於羅亞爾河谷城堡群，於2000年列入世界文化遺產。\n\n午餐備案\nSelf service\n3.2 顆星(177)·€10-20 /城堡們口\nLa Maison des Pages\n4.3顆星(244)·€1-10\nBoulangerie pâtisserie Valter & Flora\n4.2顆星(232)·€1-10\nô30 Chisseaux (法式Tapas )\n4.8顆星(222)·€20-30"
+        },
+        {
+          "time": "12:30",
+          "title": "前往雷恩",
+          "detail": "長途移動約 3-3.5 小時。",
+          "tag": "drive",
+          "fullDetail": "時間：12:30\n行程項目：舍濃梭堡➔雷恩\n至雷恩車程約3-3.5小時"
+        },
+        {
+          "time": "15:00",
+          "title": "雷恩午餐 / 下午茶",
+          "detail": "Breizh Café Rennes，散步看半木造屋。",
+          "tag": "city",
+          "fullDetail": "時間：15:00 - 1620\n行程項目：雷恩\n(午餐/下午茶)\n跨入布列塔尼地區，途經首府【雷恩】古城散步，欣賞傳統半木馬賽克房屋。\n\nBreizh Café Rennes | La Crêpe Autrement\nGoogle 4.7 顆星(598)\n1 Pl. de la Trinité, 35000 Rennes, 法國\n星期六\n11:00–21:30\n備註：備案\nBig Fernand"
+        },
+        {
+          "time": "16:20",
+          "title": "前往聖馬洛",
+          "detail": "雷恩到聖馬洛約 55 分鐘。",
+          "tag": "drive",
+          "fullDetail": "時間：16:20 - 17:20\n行程項目：雷恩➔聖馬洛\n至聖馬洛飯店車程約55分鐘"
+        },
+        {
+          "time": "17:30",
+          "title": "入住與古城採購",
+          "detail": "Bordier 奶油、Roellinger 香料、Larnicol 巧克力與酥餅。",
+          "tag": "shop",
+          "fullDetail": "時間：1730-1800\n行程項目：Check In\nHôtel Mercure Saint-Malo Front de Mer\n抵達聖馬洛海港古城，可在古城牆與夕陽海灘漫步。\n\n順道前往\nBeurre Bordier 總店】\n晚餐前務必去聖馬洛古城內總店，採購「全世界最好吃手工奶油」（強烈推薦海藻、柚子、煙燻鹽口味，配麵包絕配）\n\nÉpices Roellinger - Saint-Malo\n4.6顆星(444)\n香料店·(by 三星名廚 Roellinger)\n12 Rue Saint-Vincent, 35400 Saint-Malo, 法國\n星期六、10:00–19:00\n必買香料鹽之花、煎魚專用美德之粉（Poudre des Vertus）或香草酥餅。\n\nMAISON GEORGES LARNICOL - MOF - Biscuiterie Chocolateire\n4.3顆星(265)·€1-20\n巧克力馬卡龍和布列塔尼酥餅 (在Fidelis附近)"
+        },
+        {
+          "time": "19:00",
+          "title": "FIDELIS 晚餐",
+          "detail": "10 Rue Jacques Cartier，已訂位 by Alan & Ivy。",
+          "tag": "dinner",
+          "fullDetail": "時間：19:00\n行程項目：🍴 晚餐\nFIDELIS\nGoogle 4.8顆星(1,511)·€36(setMenu)\n10 Rue Jacques Cartier, 35400 Saint-Malo, 法國\n可單點單點康卡爾 3 號生蠔、聖皮埃爾魚\n或炙烤布列塔尼藍龍蝦（佐 Kari Gosse 咖哩奶油）。\n(已訂位 by Alan & Ivy )\n\n位於法國聖瑪洛（Saint-Malo）舊城區（Intra-Muros）核心地帶的 FIDELIS 餐廳，是一家受到高度評價的時尚餐館。該餐廳以其創意精緻、且融合拉丁辛香料與布列塔尼在地食材的法式料理聞名，並獲得了米其林「必比登推介」（Bib Gourmand），代表其提供物有所值的高品質美食\n備註：2026 年米其林指南法國》中，持續蟬聯其「必比登推介」（Bib Gourmand)\n,在 2026 年亦獲得 Gault & Millau 給予 13/20 的評分與\n「Table de Chef」的認可"
+        }
+      ],
+      "food": [
+        "Breizh Café Rennes：可麗餅，表格列 Google 4.7。",
+        "FIDELIS：表格列 €36 set menu，可單點生蠔、魚、藍龍蝦。",
+        "聖馬洛採購：Bordier 奶油、Roellinger 香料、Larnicol 甜點。"
+      ],
+      "costs": [
+        "舍濃梭堡門票：成人 €19 x 5 + 小孩 €15 x 2 = €125，Sam 已付。",
+        "Alan 家 / Sam 家各 €85；Ivy €35。"
+      ],
+      "alerts": [
+        "中午到雷恩會偏晚，午餐要簡化；不要把雷恩當完整城市深度遊。"
+      ]
+    },
+    {
+      "id": "day5",
+      "day": "Day 5",
+      "date": "7/5",
+      "weekday": "週日",
+      "title": "聖米歇爾山與諾曼第海岸",
+      "subtitle": "滿潮、Calvados、Étretat、Le Havre",
+      "image": "assets/day-05.png",
+      "stay": "Hilton Garden Inn Le Havre",
+      "route": "Saint-Malo → Mont Saint-Michel → Château du Breuil → Étretat → Le Havre",
+      "pace": "最硬的一天",
+      "events": [
+        {
+          "time": "早餐",
+          "title": "Saint-Malo 早餐",
+          "detail": "La Maison du Pain 或 McDonald's；若買了 Bordier 奶油可搭熱麵包。",
+          "tag": "breakfast",
+          "fullDetail": "時間：7/5/2026\n星期日\n行程項目：早餐\n1.La Maison du Pain\n   • 備註：週日 07:00 就開門，最適合避開觀光人潮。\n\n如國有買 Bordier 奶油(厚厚地抹在熱騰騰的麵包上)\n\n2.McDonalds"
+        },
+        {
+          "time": "08:00",
+          "title": "聖馬洛出發",
+          "detail": "前往聖米歇爾山，車程約 55 分鐘。",
+          "tag": "drive",
+          "fullDetail": "時間：08:00\n聖馬洛出發\n行程項目：聖馬洛➔ 聖米歇爾山\n出發前往西北法最神聖的地標聖米歇爾山。\n至聖米歇爾山車程約55分鐘"
+        },
+        {
+          "time": "09:00",
+          "title": "聖米歇爾山",
+          "detail": "修道院參觀、11:14 滿潮，表格規劃 09:00-13:00。",
+          "tag": "abbey",
+          "fullDetail": "時間：09:00-1300\n行程項目：參觀聖米歇爾山【聖米歇爾山修道院】\n聖米歇爾山（Mont Saint-Michel）是法國諾曼第地區距海岸約 1 公里的岩石孤島，為天主教徒最著名的朝聖地之一，並於 1979 年被聯合國教科文組織列入世界文化遺產。整座島嶼由潮汐海灣環繞，山頂坐落著壯麗的聖米歇爾山修道院，其獨特的防禦性中世紀建築與獨特的自然奇觀交織，被譽為「上帝最偉大的作品」\n10:00 - 11:00 | 修道院參觀修道院內部：此時進入修道院能避開中午的大型團客。由於您對建築與歷史有興趣，請務必參觀其「騎士廳」與「迴廊」，感受中世紀建築與花崗岩山的完美結合。\n11:00 - 11:30 | 觀賞滿潮 (預計 11:14 滿潮)最佳點位：走出修道院後，前往西側平台 (West Terrace)。您會看到海水從地平線快速湧入海灣。雖然係數 68 不會淹沒橋樑，但足以讓山體呈現「海上孤島」的視覺效果。"
+        },
+        {
+          "time": "11:30",
+          "title": "午餐彈性選擇",
+          "detail": "La Mère Poulard、Restaurant La Confiance、Mont Burger，依現場排隊決定。",
+          "tag": "lunch",
+          "fullDetail": "行程項目：午餐時間\n11:30 - 13:00 | 午餐時間：\n(視現場排隊人潮及候位況從以下選擇)\nLa Mère Poulard (普拉嬤嬤)：上午 11:30 開放午餐，以柴燒歐姆蛋聞名。\nOr\nRestaurant La Confiance\n4.2顆星(7,456)·€20-30\nor\nMont Burger\n4.8顆星(717)·€10-20\n\nLe Logis Sainte Catherine\n4.7(26)·€90-100\n：這是一家由知名銅鍋品牌 Mauviel1830 經營的餐廳，位於山岩上，避開了主街的喧囂。除了擁有絕佳的景觀外，其料理（如魚類與聖雅克扇貝）被讚譽為聖米歇爾山上難得一見的高水準精緻烹飪\n\n下山與伴手禮順著主街下山，可以購買著名的 La Mère Poulard 鐵盒餅乾。💡\n\nLa Ferme Saint-Michel評價：4.2/5。推薦點：位於接駁車站點旁，環境是溫馨的鄉間農場風格。其鹽沼羊肉 (Agneau de pré-salé) 與蘋果派評價極佳，且餐點份量慷慨。\n\nRestaurant Le Pré Salé評價：4.0/5。推薦點：由 Hotel Mercure 經營，是當地高人氣的排隊名店。裝潢具藝術氣息且氣氛優雅，其鹽沼羊排搭配低溫烹飪技術，肉質嫩滑且無腥味，是追求道地諾曼第風味的理想選擇。"
+        },
+        {
+          "time": "13:30",
+          "title": "前往 Château du Breuil",
+          "detail": "聖米歇爾山到酒莊約 120 分鐘。",
+          "tag": "drive",
+          "fullDetail": "時間：13:30\n行程項目：聖米歇爾山➔Château du Breuil\n至Château du Breuil 酒莊車程約120分鐘"
+        },
+        {
+          "time": "15:30",
+          "title": "Calvados 酒莊",
+          "detail": "Château du Breuil 試喝與採購，表格列週日 09:00-18:30。",
+          "tag": "tasting",
+          "fullDetail": "時間：1530-1630\n行程項目：頂級蘋果白蘭地莊園\n國寶名酒採購：卡爾瓦多斯名莊】\nChâteau du Breuil  蘋果白蘭地莊園。城堡總部試喝，入手傳統火漆封口、極具質感的 VSOP 或 XO Calvados。\n\nMcDonald's Pont-L'Évêque\n靠近酒莊\n\nLa Spiriterie Française - Château du Breuil\n星期日\n09:00–18:30\nSalon du Thé - Le Dauphin (酒莊旁/有甜點,鹹派)\n星期日\n10:30–18:30"
+        },
+        {
+          "time": "16:30",
+          "title": "前往 Étretat",
+          "detail": "酒莊到象鼻海岸約 70 分鐘。",
+          "tag": "drive",
+          "fullDetail": "時間：16:30\n行程項目：Château du Breuil ➔ 埃特雷塔\n至埃特雷塔 (象鼻海岸)車程約70分鐘"
+        },
+        {
+          "time": "17:50",
+          "title": "象鼻海岸",
+          "detail": "白堊斷崖與海蝕洞夕陽健行。",
+          "tag": "coast",
+          "fullDetail": "時間：1750-1830\n行程項目：傍晚\n象鼻海岸\n抵達【埃特雷塔 (象鼻海岸)】，此時陽光正好照射在白堊斷崖上，在懸崖邊健行，捕捉經典象鼻海蝕洞與夕陽美景。\n至Hilton Garden Inn Le Havre車程約70分鐘\n\n時間：18:40\n行程項目：象鼻海岸➔ \nLe Havre\n至Hilton Garden Inn Le Havre車程約70分鐘"
+        },
+        {
+          "time": "19:30",
+          "title": "Le Havre 入住",
+          "detail": "Hilton Garden Inn Le Havre。",
+          "tag": "hotel",
+          "fullDetail": "時間：19:30\n行程項目：Check In\nHilton Garden Inn Le Havre(位於濱海港口區)"
+        },
+        {
+          "time": "20:00",
+          "title": "Les Régates 晚餐",
+          "detail": "飯店步行約 4 分鐘，已訂位 20:00。",
+          "tag": "dinner",
+          "fullDetail": "時間：20:00\n行程項目：🍴 晚餐\nLes Régates (飯店走路4分鐘)濱海港口區\n4.5顆星(748)·€30-60\nQuai Eric Tabarly, 76600 Le Havre, 法國\n星期日\n09:00–21:00\n ( 已訂位 PM0800 )\nLes Régates 是一間位於法國勒阿弗爾（Le Havre）遊艇碼頭旁的法式餐廳，以其優美的海濱景致和精緻的法國料理聞名。這家餐廳隸屬於法國最古老的帆船俱樂部，擁有俯瞰港口入口和塞納河灣的絕佳全景視野\n餐廳提供傳統且精緻的法式料理，強調使用新鮮的在地食材"
+        }
+      ],
+      "food": [
+        "聖米歇爾山午餐：依排隊狀況選 La Mère Poulard / La Confiance / Mont Burger。",
+        "Château du Breuil 旁可補 McDonald's 或 Salon du Thé。",
+        "Les Régates：Le Havre 港口餐廳，表格列 €30-60。"
+      ],
+      "costs": [
+        "聖米歇爾山修道院門票：€16 x 5 + €0 x 2 = €80，Sam 已付。"
+      ],
+      "alerts": [
+        "這天移動非常滿，聖米歇爾山停車、接駁與上山都會吃時間；Étretat 若遇塞車可縮短停留。"
+      ]
+    },
+    {
+      "id": "day6",
+      "day": "Day 6",
+      "date": "7/6",
+      "weekday": "週一",
+      "title": "諾曼第回巴黎",
+      "subtitle": "Honfleur、Rouen、Giverny、Paris",
+      "image": "assets/day-06.png",
+      "stay": "voco Paris Montparnasse",
+      "route": "Le Havre → Honfleur → Rouen → Giverny → Paris",
+      "pace": "滿",
+      "events": [
+        {
+          "time": "08:20",
+          "title": "Le Havre 出發",
+          "detail": "前往 Honfleur，車程約 35 分鐘。",
+          "tag": "drive",
+          "fullDetail": "時間：08:20\n勒阿弗爾\n Le Havre\n出發\n行程項目：勒阿弗爾 Le Havre➔ 翁弗勒Honfleur\n早晨自勒阿弗爾港口出發，開啟回程的藝文小鎮巡禮\n至翁夫勒車程約35分鐘"
+        },
+        {
+          "time": "09:00",
+          "title": "Honfleur 早餐與散步",
+          "detail": "老港、木造碼頭、畫廊；Pollen 或 Le Brunch Café 二選一。",
+          "tag": "harbor",
+          "fullDetail": "時間：09:00-10:30\n翁弗勒\nHonfleur\n行程項目：早餐\n拜訪精緻浪漫的【翁弗勒 (Honfleur)】老港小鎮，漫步於古老狹窄的木造碼頭與藝術畫廊間。\n翁弗勒境內有多處歷史建築，其中皇家中尉院、聖卡特里娜教堂、聖德田教堂等為法國國家文物保護單位\n\n早餐Pollen and Le Brunch Caf 二擇一\nPollen\n4.8顆星(236)\n12 Rue Haute, 14600 Honfleur, 法國\nLe Brunch Café 早午餐\n4.7顆星(711) Brunch Set €20-50\nEn haut des marches, 4 Rue des Logettes, 14600 Honfleur, 法國\n星期一09:00–18:00\n\nLou Cabana 海鮮餐廳/ 舊港口旁\n4.6顆星(681)·€20-50\n3 Quai Saint-Etienne, 14600 Honfleur, 法國"
+        },
+        {
+          "time": "10:30",
+          "title": "前往 Rouen",
+          "detail": "Honfleur 到 Rouen 約 80 分鐘。",
+          "tag": "drive",
+          "fullDetail": "時間：10:30\n翁弗勒\n行程項目：翁弗勒➔ 盧昂\n至盧昂車程約80分鐘"
+        },
+        {
+          "time": "12:30",
+          "title": "La Couronne 午餐",
+          "detail": "法國古老客棧，已訂位 12:30，no-show 罰 €105。",
+          "tag": "lunch",
+          "fullDetail": "時間：12:00\n盧昂\nRouen\n行程項目：午餐時間\n歷史古城【盧昂】，參觀宏偉的胡昂主教座堂、大時鐘並享用午餐。\n盧昂（Rouen）這座城市擁有超過2000年的悠久歷史，中世紀時曾是諾曼第公國的首都。盧昂以其保存完好的木骨架房屋、輝煌的哥德式教堂以及與「聖女貞德」和「畫家莫內」的深厚淵源而聞名於世，更被文豪雨果譽為「百鐘空中迴響之城」。歷史與文化地位聖女貞德的就義地：1431年英法百年戰爭期間，民族英雄聖女貞德在盧昂的舊市集廣場被判火刑處死。印象派的光影舞台：畫家莫內曾長居於此，為當地的地標大教堂繪製了約30幅著名的系列畫作。\n\n時間：12:00\n盧昂\nRouen\n行程項目：午餐時間\nLa Couronne (法國最古老的客棧)\n( 已訂位PM1230 , no show 罰105歐元  )\n星期日\n12:00–14:30\n19:00–22:30"
+        },
+        {
+          "time": "13:40",
+          "title": "前往 Giverny",
+          "detail": "Rouen 到 Giverny 約 70 分鐘。",
+          "tag": "drive",
+          "fullDetail": "時間：13:40\n行程項目：盧昂Rouen➔\n吉維尼小鎮\nGiverny\n至吉維尼車程約70分鐘"
+        },
+        {
+          "time": "15:10",
+          "title": "Giverny 莫內花園",
+          "detail": "水景花園、日本橋、睡蓮池、故居與小鎮散步。",
+          "tag": "garden",
+          "fullDetail": "時間：15:10\n行程項目：吉維尼小鎮\nGiverny\n吉維尼（Giverny）是法國諾曼第大區的一個絕美小鎮，坐落於塞納河畔，距離巴黎市中心西北方約75公里。這座小鎮因印象派大師莫內（Claude Monet）在此定居43年並創作出《睡蓮》系列而舉世聞名，被譽為「印象派的搖籃」，每年吸引無數藝術與園藝愛好者前來朝聖。\n\n散步路線規畫 (共 150 分鐘)1. 抵達與定位 (0 - 15 分鐘)從停車場出發：無論是搭接駁巴士或自駕，\n下車後沿著指示牌步行約 10 分鐘即可抵達村莊中心。沿途風景：穿過唯一的街道 Rue Claude Monet，這條路花草扶疏，雖然好拍，但建議回程再拍以爭取入園時間。\n核心參觀：莫內花園與故居 (15 - 120 分鐘)第一步：水景花園 (Water Garden)：入園後建議先通過地下道前往水池區，尋找著名的日本橋與睡蓮池。此區遊客極多且常在橋上拍照導致阻塞，優先參觀可避開後續更大的人潮。\n第二步：諾曼第花園 (Clos Normand)：回到主花園區域，漫步於繽紛的花毯間。第三步：莫內故居參觀：進入粉色大宅參觀畫室與餐廳。注意室內通常需要排隊，若時間剩餘不足 30 分鐘，建議轉往紀念品店或花園其他角落。\n\n小鎮漫步與賦歸波迪酒店 (Ancien Hôtel Baudy)回程途中經過這間歷史名店，可在門外拍照，感受當年雷諾瓦、塞尚等藝術家在此聚會的氣氛。\nAu Coin du Pain'tre：\n特色：這是一間氛圍清幽、店員親切的麵包店與輕食餐館。推薦：其戶外庭院非常適合短暫休息，您可以點一份美味的手工鹹派（Tarte）、開心果杏仁塔或現做的三明治與手工碎片餅乾（Crumble）。\n\nAncien Hôtel Baudy (Baudy 餐廳)：\n特色：這曾是莫內、塞尚與雷諾瓦聚會的地方，擁有極具歷史意義的畫室與玫瑰花園。推薦：除了著名的鮑迪煎蛋外，這裡也提供 Café Gourmand（咖啡配精選甜點組）、巧克力巧克力熔岩蛋糕（Fondant Au Chocolat）或卡門貝爾起司薄餅（Camembert Crêpe），讓您在參觀完後享受一段藝術氣息濃厚的時光。\n\nGourmandises de Giverny：特色：距離莫內花園出口僅幾分鐘路程，是購買手工甜點的理想站點。推薦：提供以莫內最愛的甜食為靈感的手工點心，如橙皮蛋糕、費南雪、瑪德蓮，或是清爽的檸檬塔與高品質咖啡。"
+        },
+        {
+          "time": "17:50",
+          "title": "Giverny 前往巴黎",
+          "detail": "回巴黎車程約 80 分鐘，實際抵達約 19:10 前後。",
+          "tag": "drive",
+          "fullDetail": "時間：17:50\n行程項目：吉維尼Giverny ➔ 巴黎Paris\n至巴黎Paris車程約80分鐘\n\n時間：17:20\n行程項目：Check In\nvoco Paris Montparnasse"
+        },
+        {
+          "time": "20:00",
+          "title": "Le Plomb du Cantal 晚餐",
+          "detail": "飯店附近，牽絲 Aligot，現場候位。",
+          "tag": "dinner",
+          "fullDetail": "時間：20:00\n行程項目：🍴 晚餐\nLe Plomb du Cantal (牽絲馬鈴薯泥Aligot )\n4.3顆星 (6,294)·€20-30\n*不接受訂位, 到飯店後再走過去問\n\n這是一間位於巴黎、以法國奧弗涅（Auvergne）大區美食聞名的人氣小館（Bistro）。該餐廳以其超大份量的道地鄉村料理及充滿活力的用餐氛圍著稱，被譽為巴黎呈現奧弗涅風味的「形象大使」。以下為餐廳的簡要介紹：核心特色菜餚餐廳的靈魂是其極具視覺效果的起司馬鈴薯料理，服務生通常會現場表演從銅鍋中將拉絲起司馬鈴薯泥倒在餐盤上的過程。Aligot（起司馬鈴薯泥）：由馬鈴薯泥與大量大蒜、奶油及法國康塔爾（Cantal）起司混合而成，質地極為黏稠，呈現如「瀑布」般的拉絲效果。Truffade（煎起司馬鈴薯片）：與 Aligot 成份類似，但馬鈴薯保留了塊狀或片狀口感，質地較為紮實且帶有焦香味。搭配主餐：這些馬鈴薯料理通常搭配法式香腸、油封鴨、牛排或培根等肉類主"
+        }
+      ],
+      "food": [
+        "Honfleur：Pollen / Le Brunch Café / Lou Cabana。",
+        "Rouen：La Couronne 已訂位。",
+        "Giverny：Au Coin du Pain'tre、Ancien Hôtel Baudy、Gourmandises de Giverny。",
+        "巴黎晚餐：Le Plomb du Cantal，表格列 €20-30。"
+      ],
+      "costs": [
+        "La Couronne no-show 罰 €105，務必準時。",
+        "Giverny 門票未列入費用分攤頁。"
+      ],
+      "alerts": [
+        "Excel 內有 17:50 離開 Giverny、17:20 check-in Paris 的時間倒置；建議以 19:10 左右抵達巴黎估算。"
+      ]
+    },
+    {
+      "id": "day7",
+      "day": "Day 7",
+      "date": "7/7",
+      "weekday": "週二",
+      "title": "島嶼人文與塞納河晚餐",
+      "subtitle": "聖母院、莎士比亞書店、河粉、Ducasse sur Seine",
+      "image": "assets/day-07.png",
+      "stay": "voco Paris Montparnasse",
+      "route": "voco → Île Saint-Louis → Marais / Left Bank → Port Debilly",
+      "pace": "舒服",
+      "events": [
+        {
+          "time": "08:30",
+          "title": "飯店出發",
+          "detail": "前往西堤島與聖路易島區域。",
+          "tag": "move",
+          "fullDetail": "時間：08:30\nVOCO\n出發\n行程項目：VOCO➔ 聖路易島戶外\n飯店出發，前往西堤島與聖路易島區域漫步。"
+        },
+        {
+          "time": "早餐",
+          "title": "島上咖啡館早餐",
+          "detail": "Cafe St Regis 或 Le Saint-Regis；可順路買 La Parisienne。",
+          "tag": "breakfast",
+          "fullDetail": "行程項目：早餐\n經典巴黎風情——聖路易島戶外咖啡館\nCafe st Regis by Notre dame\n4.5(26)·€10-20\nor\nLe Saint-Regis - Paris\n4.4(3,023)·€10-50\n\n2016年奪得巴黎最佳傳統法棍獎的「La Parisienne」長期躋身在當地居民與遊客的愛店名單中，緩慢而仔細的揉捏、長時間發酵並輕微塑形，最後在層式烤箱中以傳統方式烹調，造就蜂窩狀的麵包富有焦糖色澤、細膩而酥脆的口感，一口咬下盡在嘴中綻放奶油與堅果的香味；此外，La Parisienne亦有販售人氣香草可頌、精緻甜點以及結合自製麵包的創意鹹食，滿足食客的味蕾體驗。 (右岸前往莎士比亞書店可順便購買)"
+        },
+        {
+          "time": "09:00",
+          "title": "聖母院與左岸散步",
+          "detail": "巴黎聖母院、莎士比亞書店、聖路易島、Berthillon 冰淇淋。",
+          "tag": "walk",
+          "fullDetail": "時間：09:00-11:30\n聖路易島\n巴黎聖母院\nCathédrale Notre-Dame de Paris巡禮 ➔ 沙士比亞書店 ➔ 聖路易島散步。Berthillon 冰淇淋 (聖路易島最指標性的頂級法式冰品)。\n\n巴黎聖母院（Cathédrale Notre-Dame de Paris）位於市中心西堤島，是法國最具代表性的哥德式天主教座堂。歷經2019年大火與五年漫長修復後，已於2024年底重新開放參觀，展現新舊交織的建築藝術與歷史風華。\n\n巴黎聖母院建築與歷史特色\n法式哥德經典：建於1163年至1350年間，以其壯觀的玫瑰花窗、尖拱肋拱及飛扶壁聞名，外觀牆面上矗立著表情生動的石像鬼（Gargouilles）與怪獸。\n法國歷史樞紐：曾見證無數重大歷史事件，最著名為1804年拿破崙在此加冕稱帝。\n備註：https://www.notredamedeparis.fr/en/visit/reservation-free/\n\n巴黎零點（Point Zéro）：\n教堂外廣場上的原點紀念碑，是法國測量全國各地里程的起點，象徵其「巴黎之心」的崇高地位。\n\n文學靈魂：法國大文豪維克多·雨果曾以此為背景寫下經典名著《巴黎聖母院》（俗稱《鐘樓怪人》），成功喚起大眾對古蹟保護的重視。\n\n莎士比亞書店（Shakespeare and Company）是巴黎最具傳奇色彩的英文書店，位於左岸第 5 區，就在巴黎聖母院（Notre-Dame）對岸曾是海明威、費茲傑羅等「迷惘的一代」作家的聚集地\n書店內部如迷宮般的結構極具藝術氣息，主要分為兩層樓：\n一樓： 主要是新書區，販售各類英文文學經典與新書。\n二樓（上層）： 包含閱讀室、古董書籍區、一架鋼琴以及兩台舊打字機。這裡甚至還藏有床鋪，據說已接待過超過三萬名被稱為「風滾草」（Tumbleweeds）的年輕作家入住，以此換取在店內幫忙\n\n參觀實用資訊\n禁止攝影： 書店內部禁止拍照，旨在保留寧靜的閱讀氛圍並減少對顧客的干擾。\n排隊管制： 由於知名度極高（曾是金城武廣告與《日落之前》電影取景地），門口經常有排隊人潮，入內人數有嚴格管制。\n紀念品： 該店的帆布購物袋是當地非常熱門的文青伴手禮。"
+        },
+        {
+          "time": "12:00",
+          "title": "Ha Noi 1988 Sao Vang 午餐",
+          "detail": "已訂位 12:00，北越河粉。",
+          "tag": "lunch",
+          "fullDetail": "時間：12:00\n聖路易島\n行程項目：午餐時間\nHa Noi 1988 Sao Vang (享用熱騰騰、湯頭清甜的道地北越河粉)。\n訂位1200"
+        },
+        {
+          "time": "下午",
+          "title": "甜點與彈性活動",
+          "detail": "Yann Couvreur、Jacques Genin、Tout Autour du Pain、孚日廣場、Pierre Hermé 等。",
+          "tag": "free",
+          "fullDetail": "行程項目：下午彈性活動\nYann Couvreur 瑪黑23bis Rue des Rosiers, 75004 Paris, 法國\nOr Jacques Genin (品嚐隱藏版現做千層派與頂級巧克力工藝) & Tout Autour du Pain (可頌)\n133 Rue de Turenne, 75003 Paris, 法國\n\n孚日廣場 (雨果之家)\nBrigat' 4.7顆星 (1,276)\n6 Rue du Pas de la Mule, 75003 Paris, 法國\n\nCafé Pierre Hermé\n126 Bd Saint-Germain, 75006 Paris, 法國\n\nLa Maison d'Isabelle\n47ter Bd Saint-Germain, 75005 Paris, 法國\nLa Maison d'Isabelle 獲得「巴黎最佳可頌冠軍」的年份是 2018 年 &2022國王派\nBoulangerie du Sentier (2026 巴黎可頌冠軍)\n47 Rue du Caire, 75002 Paris, 法國\n\nBoulangerie du Sentier (2026 巴黎可頌冠軍)\n47 Rue du Caire, 75002 Paris, 法國\n\nPleincœur, 64 Rue des Batignolles, 75017 Paris, 法國\nPleincœur 的創辦人兼主廚是近年在國際甜點界聲名大噪、被譽為天才糕點師的 Maxime Frédéric。他不僅在 2022 年榮獲《Gault & Millau》評選的年度最佳糕點師，更在 2025 年奪下 La Liste 頒發的「全球最具創意糕點師」（The most creative pastry chef in the world）世界級殊榮。路易威登（Louis Vuitton）長期合作夥伴：LV 在巴黎開設的咖啡廳（Maxime Frédéric at Louis Vuitton）及精品巧克力店，其所有精緻甜點與巧克力皆由他一手操刀設計"
+        },
+        {
+          "time": "18:30",
+          "title": "前往 Port Debilly",
+          "detail": "G7 / Uber 約 20 分鐘，或步行 + 地鐵 6 號線約 30 分鐘。",
+          "tag": "move",
+          "fullDetail": "時間：18:30\n行程項目：VOCO ➔ Ducasse sur Seine, 19 Port Debilly, 75116 Paris\nG7 or Uber車程約20分鐘\n走路+地鐵6號線約30分鐘"
+        },
+        {
+          "time": "19:30",
+          "title": "Ducasse sur Seine",
+          "detail": "19:15 前抵達；20:30 開船，航程約 2-2.5 小時。",
+          "tag": "dinner cruise",
+          "fullDetail": "時間：19:30\n行程項目：🍴 晚餐\n1915前要到\n塞納河豪華晚餐遊船 Ducasse sur Seine (已預訂 19:30 晚餐，20:30開船航程約 2-2.5 小時)\n  ※ 提示：遊船晚餐有 Smart Casual 服裝要求，大人小孩請避免運動服、短褲與拖鞋。\n\nDucasse sur Seine 是由擁有「21 顆米其林星星」紀錄的法國廚神 Alain Ducasse 所主理的頂級遊船餐廳。這艘船於 2018 年正式啟航，是塞納河上首艘 100% 純電動 的環保遊船，提供安靜且無油煙味的優雅用餐環境\n\n餐廳特色與氛圍\n-環保且靜謐： 採用全電動驅動，航行時非常寧靜且無 震動，讓賓客能專注於美食與窗外美景。\n- 流動的饗宴： 船身設有大面積玻璃帷幕，讓您在 1.5 至 2 小時的航程中，能從水面視角近距離欣賞\n艾菲爾鐵塔、羅浮宮、巴黎聖母院與奧賽博物館等名勝。\n- 現代法式料理： 由主廚精心設計，強調時令食材，所有菜餚皆是在船上的廚房現地烹製，而非事先做好的加熱餐點。\n備註：乘船地點： Port Debilly (地址：19 Port Debilly, 75116 Paris)，位於巴黎第 16 區，正對著艾菲爾鐵塔"
+        }
+      ],
+      "food": [
+        "Ha Noi 1988 Sao Vang：12:00 已訂位。",
+        "甜點備案：Yann Couvreur、Jacques Genin、La Maison d'Isabelle、Boulangerie du Sentier。",
+        "Ducasse sur Seine：已預訂晚餐遊船。"
+      ],
+      "costs": [
+        "Ducasse sur Seine：€175 x 7 = €1,225；刷卡 TWD 45,455，TWD 6,494 / 人。"
+      ],
+      "alerts": [
+        "Ducasse 有 Smart Casual 服裝要求，避免運動服、短褲與拖鞋。"
+      ]
+    },
+    {
+      "id": "day8",
+      "day": "Day 8",
+      "date": "7/8",
+      "weekday": "週三",
+      "title": "Outlet 採購日",
+      "subtitle": "La Vallée Village｜保留最大彈性",
+      "image": "assets/day-08.png",
+      "stay": "voco Paris Montparnasse",
+      "route": "Paris → La Vallée Village → Paris",
+      "pace": "彈性",
+      "events": [
+        {
+          "time": "早餐",
+          "title": "早餐三選一",
+          "detail": "Cédric Grolet Opéra、Café Bohème Edgar Quinet、TYerry's Café。",
+          "tag": "breakfast",
+          "fullDetail": "行程項目：早餐\n以下擇一\nCédric Grolet Opéra 0900-1030\n早餐€50  Brunch €65\n\nCafé Bohème Edgar Quinet  €13.5\nGoogle 4.2 顆星(2,715+ 評論)\n星期二、08:00–02:00\n\nTYerry's Café €25\nGoogle 4.7顆星(7,025評論)·\n60 Bd du Montparnasse, 75006 Paris\n星期三、09:00–02:00"
+        },
+        {
+          "time": "上午",
+          "title": "前往 La Vallée Village",
+          "detail": "搭 RER A 約 90 分鐘。",
+          "tag": "train",
+          "fullDetail": "行程項目：➔ La Vallée Village\n搭RER A 至La Vallée Village 約90分鐘"
+        },
+        {
+          "time": "整天",
+          "title": "Outlet 採購",
+          "detail": "集中火力採買精品與名品，下午依採購進度調整。",
+          "tag": "shopping",
+          "fullDetail": "La Vallée Village (Outlet) 集中火力採買名品、精品。\n\n行程項目：下午安排\n依採購進度彈性調整"
+        },
+        {
+          "time": "晚餐",
+          "title": "晚餐彈性",
+          "detail": "依回程時間決定；飯店附近可選 Tripletta Gaite 或 Jiayan。",
+          "tag": "dinner",
+          "fullDetail": "行程項目：🍴 晚餐\n依採購進度彈性調整\n\n飯店附近\nTripletta Gaite or \nJiayan(中餐)"
+        }
+      ],
+      "food": [
+        "Cédric Grolet Opéra：早餐 €50 / brunch €65。",
+        "Café Bohème Edgar Quinet：表格列 €13.5。",
+        "TYerry's Café：表格列 €25。",
+        "飯店附近晚餐：Tripletta Gaite 或 Jiayan。"
+      ],
+      "costs": [
+        "RER / 交通費與購物支出未列入費用表。"
+      ],
+      "alerts": [
+        "購物日不要塞景點；保留退稅、試穿、排隊與回飯店整理戰利品時間。"
+      ]
+    },
+    {
+      "id": "day9",
+      "day": "Day 9",
+      "date": "7/9",
+      "weekday": "週四",
+      "title": "鐵塔午餐與精品日",
+      "subtitle": "Ladurée、凱旋門、Madame Brasserie、Chanel、拉法葉",
+      "image": "assets/day-09.png",
+      "stay": "voco Paris Montparnasse",
+      "route": "voco → Champs-Élysées → Arc → Eiffel Tower → Rue Cambon → Galeries Lafayette",
+      "pace": "滿",
+      "events": [
+        {
+          "time": "08:00",
+          "title": "飯店出發到 Ladurée",
+          "detail": "車程約 35 分鐘。",
+          "tag": "move",
+          "fullDetail": "時間：08:00\nVOCO\n出發\n行程項目：VOCO➔  Ladurée\n至 Ladurée 車程約35分鐘"
+        },
+        {
+          "time": "08:40",
+          "title": "Ladurée 早餐",
+          "detail": "香榭大道旗艦店，表格列 08:00-21:30。",
+          "tag": "breakfast",
+          "fullDetail": "行程項目：早餐\n08:40 Ladurée 香榭大道旗艦店 (享用經典法式早餐)。\n拉杜蕾 巴黎香榭大道店\nLadurée Champs-Elysées\nGoogle 4.2顆星 (16,156)·\n星期四、08:00–21:30"
+        },
+        {
+          "time": "10:10",
+          "title": "凱旋門拍照",
+          "detail": "從 Ladurée 走路約 12 分鐘，預計 10:00-10:40。",
+          "tag": "photo",
+          "fullDetail": "時間：10:10\n行程項目：Ladurée ➔ 凱旋門\n1000-1040 巴黎凱旋門Arc de Triomphe\n距離750公尺走路12分鐘\n\n行程項目：凱旋門\n巴黎凱旋門（Arc de Triomphe）是世界上最著名的紀念性建築之一，位於香榭麗舍大道的西端起點。 這座宏偉的巨石拱門高約 50 公尺，由拿破崙於 1806 年為紀念奧斯特里茨戰役勝利、彰顯法國軍隊功績而下令興建。它不僅是巴黎的象徵性地標，更位處戴高樂廣場（舊稱星形廣場）中心，由此向外呈放射狀延伸出 12 大重要大道，形成極具震撼力的城市景觀。\n四大歷史巨幅浮雕：凱旋門四根巨型石柱上刻有精美絕倫的浮雕，最著名的為面向香榭麗舍大道右側的《馬賽曲》（Le Départ de 1792，描繪志願軍出征）。\n\n拍照打卡點\n香榭麗舍大道中央安全島（最經典正立面）：位於香榭麗舍大道靠近凱旋門的馬路中央，設有行人專用安全島。您可以站在這裡拍出對稱、筆直且將一整排林蔭大道與凱旋門同時入鏡的世紀大片。\n地下通道出口階梯（網美透視風）：從香榭麗舍大道通往凱旋門的地下道（Passage Souterrain）走上來時，在即將出地面的階梯上回頭，利用地下道出口的幾何框架作為天然畫框，能拍出極具層次感的透視構圖。\n大軍隊大道側（避開人潮的背面）：位於凱旋門另一側的大軍隊大道（Avenue de la Grande Armée）。這裡的遊客數量遠比香榭麗舍大道少，但建築同樣雄偉，非常適合想避開背景人潮、拍出乾淨畫面的旅客。\n💡 拍照實用小貼士安全第一：在安全島拍照時請勿為了角度而跨出白線，凱旋門圓環車流極快且無紅綠燈，切勿闖入車道。"
+        },
+        {
+          "time": "10:40",
+          "title": "前往 Eiffel Tower",
+          "detail": "步行 + 地鐵 6 號線約 30 分鐘。",
+          "tag": "metro",
+          "fullDetail": "時間：10:40\n行程項目：凱旋門 ➔  Eiffel Tower\n走路+地鐵6號線約30分鐘"
+        },
+        {
+          "time": "11:30",
+          "title": "Madame Brasserie 報到",
+          "detail": "12:00 鐵塔一樓午餐，11:15 起接待，11:30 抵達南腳安檢。",
+          "tag": "lunch",
+          "fullDetail": "時間：10:40\n行程項目：Eiffel Tower\n艾菲爾鐵塔（Tour Eiffel，又稱巴黎鐵塔）是法國最具全球知名度的文化象徵，也是世界上遊客造訪量最大的付費登頂地標。 這座位於塞納河畔戰神廣場的鏤空結構鐵塔，高度達 330 公尺，由建築師古斯塔夫·艾菲爾（Gustave Eiffel）為慶祝 1889 年法國大革命百年的巴黎世界博覽會而設計建造。它曾維持世界最高人造建築紀錄長達 41 年，如今不僅是巴黎的天際線核心，更是造訪巴黎絕對不可錯過的必訪景點。\n\n時間：1130-1315\n行程項目：午餐時間\n午餐安排：12:00 Madame Brasserie 鐵塔一樓景觀午餐 (已成功預訂！ Payment Euro495.6)。\n重點備註：午餐請務必於 11:30 提早抵達鐵塔南腳 (South Pillar) 的餐廳專屬安檢通道報到\nTo fully enjoy your experience:\nFor the 12:00 PM service, we welcome you from 11:15 am for a meal ending at 1:15 pm.\nIs there a specific dress code for coming to the Brasserie?For dinner, a proper attire is required (are not allowed : sportswear, jogging, running shoes, flip-flops)."
+        },
+        {
+          "time": "13:15",
+          "title": "前往 Chanel / 精品街",
+          "detail": "Chanel 19 Rue Cambon 預約 14:30；接續 Chanel、Hermès、Goyard、拉法葉。",
+          "tag": "shopping",
+          "fullDetail": "時間：1315-\n行程項目：Eiffel Tower➔ Chanel\nChanel 預約1430 (19 Rue Cambon)\n漫步蒙田大道精品街 (Chanel、Hermes、 Goyard 等頂級精品總店) & 拉法葉百貨"
+        },
+        {
+          "time": "20:00",
+          "title": "Balcon 晚餐",
+          "detail": "已先預約拉法葉屋頂 Balcon 20:00，依逛街狀態調整。",
+          "tag": "dinner",
+          "fullDetail": "時間：20:00\n行程項目：🍴 晚餐\n依據逛街狀態調整\n\n已先預約拉法葉屋頂Balcon PM0800晚餐"
+        }
+      ],
+      "food": [
+        "Ladurée 香榭大道早餐。",
+        "Madame Brasserie：12:00 鐵塔午餐，已付款 €495.6。",
+        "Balcon：拉法葉屋頂晚餐 20:00 已預約。"
+      ],
+      "costs": [
+        "Madame Brasserie：€495.6，尚未列入費用總覽分攤頁。"
+      ],
+      "alerts": [
+        "鐵塔午餐要提早過安檢；精品預約後面的行程需保留計程車緩衝。"
+      ]
+    },
+    {
+      "id": "day10",
+      "day": "Day 10",
+      "date": "7/10",
+      "weekday": "週五",
+      "title": "羅浮宮與回憶終章",
+      "subtitle": "Louvre、La Régalade、Bon Marché、L'Assiette",
+      "image": "assets/day-10.png",
+      "stay": "voco Paris Montparnasse",
+      "route": "voco → Louvre → La Régalade → Bon Marché → 14 區",
+      "pace": "中等",
+      "events": [
+        {
+          "time": "08:00",
+          "title": "飯店出發到羅浮宮",
+          "detail": "車程約 25 分鐘。",
+          "tag": "move",
+          "fullDetail": "時間：08:00\nVOCO\n出發\n行程項目：VOCO➔ 羅浮宮 (Louvre)\n至羅浮宮 (Louvre) 車程約25分鐘"
+        },
+        {
+          "time": "09:00",
+          "title": "羅浮宮導覽",
+          "detail": "專業導覽 09:00-10:30，聚焦三寶與重點路線。",
+          "tag": "museum",
+          "fullDetail": "時間：0900-1030\n行程項目：專業導覽員介紹\n羅浮宮（Musée du Louvre）是世界上參觀人數最多、規模最宏大的藝術博物館，也是巴黎最核心的文化地標。 [1] 這裡原本是 12 世紀末建成的防禦堡壘，後改建為法國王宮，直到 1793 年法國大革命期間正式轉型為公共博物館。羅浮宮佔地極其遼闊，常設展區高達 6 萬多平方公尺，橫跨大半個巴黎市中心，館藏超過 48 萬件 [1]，展出約 3.5 萬件珍寶，涵蓋從古文明到 19 世紀中葉的整個人類藝術史。📐 建築地標：玻璃金字塔華裔大師貝聿銘代表作：位於中庭拿破崙廣場（Cour Napoléon）上的巨大玻璃金字塔，由著名建築師貝聿銘設計，於 1989 年落成啟用。古今交融的入口：這座現代幾何結構的玻璃金字塔如今是羅浮宮的主入口，將地下現代化的遊客接待中心與古老的宮殿建築完美相連。倒置金字塔：地下購物商場（Carrousel du Louvre）內還有一座向下延伸的「倒置玻璃金字塔」，同樣是熱門的建築打卡點。\n\n必看「羅浮宮三寶」（The Big Three）大多數遊客造訪羅浮宮，第一目標都是親眼目睹這三件鎮館之寶：\n《蒙娜麗莎》（Mona Lisa）：文藝復興大師達文西的代表作。這幅神祕微笑的神級畫作位於「德農館（Denon）」二樓的大畫廊，前方總是擠滿排隊近距離觀賞的人潮。\n《薩莫色雷斯的勝利女神》（Winged Victory of Samothrace）：約西元前 2 世紀的古希臘雕雕塑。祂舒展雙翼、頂風前行的姿態極具動態美感，昂然佇立於德農館的達魯樓梯（Daru staircase）頂端。\n《米洛的維納斯》（Venus de Milo，斷臂維納斯）：西元前 100 年左右的古希臘雕像。雕刻完美呈現了古典藝術中女性人體的黃金比例，位於「叙利館（Sully）」一樓。"
+        },
+        {
+          "time": "11:40",
+          "title": "步行到 La Régalade",
+          "detail": "羅浮宮到餐廳約 10 分鐘。",
+          "tag": "walk",
+          "fullDetail": "時間：11:40\n行程項目：羅浮宮 (Louvre) ➔La Regalade\n至La Regalade步行約10分鐘"
+        },
+        {
+          "time": "12:30",
+          "title": "La Régalade Saint-Honoré 午餐",
+          "detail": "106 Rue Saint-Honoré，訂位 confirmed。",
+          "tag": "lunch",
+          "fullDetail": "時間：12:00\n行程項目：午餐時間\nLa Regalade Saint-Honoré \n( booked confirmed) PM1230\n106 Rue Saint-Honoré, 75001 Paris, 法國\n\nLa Régalade 是巴黎極具代表性的法式小館，被譽為現代「美食小館」（Bistronomie）運動的發源地\n餐廳特色與氛圍\n美食小館始祖：餐廳起源於 1992 年，初衷是讓主廚們能在簡約的環境中展示米其林等級的廚藝，並以親民的價格提供給大眾。用餐氛圍：風格溫馨怡人且不失現代感，Saint-Honoré 分店擁有具備鄉村風味的木樑和裸露石牆，環境優雅但不矯揉造作。\n招待特色：入座後通常會免費提供超大份量的自家製肉凍（pâté/terrine）、酸黃瓜和剛烤好的麵包作為開胃菜。\n\n餐廳菜單會隨季節更新，\n但以下是受公認的經典必點：\n米布丁（Rice Pudding）：這是該店最著名的甜點，\n份量極大，搭配焦糖醬與焦糖脆餅，口感濃郁且香氣十足。\n舒芙蕾（Soufflé）：尤其是 Grand Marnier 柑橘酒風味的舒芙蕾，被許多食客評為必點之作。\n主菜系列：包括外皮酥脆的酥脆豬腩肉（pork belly）、肉質鮮美的墨魚汁燉飯（squid ink risotto）以及慢火烘烤的勃艮第牛排。\n前菜推薦：蘆筍湯（搭配老康堤乳酪）與蒜香烤蝸牛都是熱門選擇"
+        },
+        {
+          "time": "14:00",
+          "title": "午後彈性採買",
+          "detail": "皇家宮殿花園拍照、Le Bon Marché 百貨、退稅補齊。",
+          "tag": "free",
+          "fullDetail": "時間：14:00\n行程項目：下午安排\n彈性調整\n\n羅浮宮周圍景點\n皇家宮殿花園拍照\n\n➔ 前往左岸 Le Bon Marché 百貨。\nLe Bon Marché 購物環境是巴黎最優雅、舒適的，非常適合在最後一天把名品補齊並在現場辦好退稅。"
+        },
+        {
+          "time": "19:30",
+          "title": "L'Assiette 晚餐",
+          "detail": "14 區米其林風格小館，訂位確認。",
+          "tag": "dinner",
+          "fullDetail": "時間：20:00\n行程項目：🍴 晚餐\nL’Assiette (14區米其林風格小館 ( 訂位確認, PM0730)"
+        },
+        {
+          "time": "睡前",
+          "title": "打包與退稅單整理",
+          "detail": "退稅單條碼朝上整理，隔天機場掃描。",
+          "tag": "packing",
+          "fullDetail": "行程項目：睡前安排\n飯店打包行李、集中整理所有退稅單 (條碼朝上整好，方便隔天掃描)。"
+        }
+      ],
+      "food": [
+        "La Régalade Saint-Honoré：午餐已確認。",
+        "L'Assiette：晚餐訂位 19:30。"
+      ],
+      "costs": [
+        "羅浮宮導覽 €230 x 2 = €460；門票 €32 x 5 = €160；Total €620，Sam 已付現金。"
+      ],
+      "alerts": [
+        "羅浮宮 90 分鐘只夠重點導覽；想慢逛會壓縮午餐與下午採買。"
+      ]
+    },
+    {
+      "id": "day11",
+      "day": "Day 11",
+      "date": "7/11",
+      "weekday": "週六",
+      "title": "離境返台",
+      "subtitle": "CDG、PABLO 退稅、BR 回程",
+      "image": "assets/day-11.png",
+      "stay": "機上",
+      "route": "voco → CDG → TPE",
+      "pace": "早起",
+      "events": [
+        {
+          "time": "07:30",
+          "title": "飯店出發到 CDG",
+          "detail": "預約送機專車，車程約 50 分鐘。",
+          "tag": "transfer",
+          "fullDetail": "時間：07:30\nVOCO\n出發\n行程項目：VOCO➔ CDG 戴高樂機場\n預約送機專車準時自 voco 飯店出發前往 CDG 戴高樂機場\n至 CDG 戴高樂機場 車程約50分鐘"
+        },
+        {
+          "time": "08:30",
+          "title": "PABLO 退稅",
+          "detail": "抵達機場後先掃退稅條碼。",
+          "tag": "tax refund",
+          "fullDetail": "時間：08:30\n行程項目：退稅 & Check In\n抵達機場，前往 PABLO 自動退稅機掃描條碼。"
+        },
+        {
+          "time": "上午",
+          "title": "托運、安檢、免稅店",
+          "detail": "辦理 check-in、托運、過安檢，最後補貨。",
+          "tag": "airport",
+          "fullDetail": "辦理托運 Check-in、過安檢、\n機場免稅店做最後補貨。"
+        },
+        {
+          "time": "11:20",
+          "title": "飛機起飛",
+          "detail": "帶著戰利品和回憶返台。",
+          "tag": "flight",
+          "fullDetail": "時間：11:20\n行程項目：飛機起飛\n飛機起飛，帶著滿滿的歡笑、精品與美食回憶平安返台！"
+        }
+      ],
+      "food": [
+        "機場早餐或候機區簡餐。"
+      ],
+      "costs": [
+        "送機專車費用未列入費用總覽。"
+      ],
+      "alerts": [
+        "7 人 + 大量行李 + 退稅，建議評估是否 07:00-07:15 出發更保險。"
+      ]
+    }
+  ]
+}
+  </script>
+
+  <script>
+    const data = JSON.parse(document.getElementById("scheduleData").textContent);
+    const menu = document.getElementById("dayMenu");
+    const hero = document.getElementById("hero");
+    const timeline = document.getElementById("timeline");
+    const foodList = document.getElementById("foodList");
+    const costList = document.getElementById("costList");
+    const alertList = document.getElementById("alertList");
+    const pageTitle = document.getElementById("pageTitle");
+    const pageSubtitle = document.getElementById("pageSubtitle");
+    const eventCount = document.getElementById("eventCount");
+    const drawer = document.getElementById("expenseDrawer");
+    const restaurantGuide = {
+      day2: [
+        { name: "Aldehyde", query: "Aldehyde 5 Rue du Pont Louis-Philippe Paris", rating: "Google 約 4.8", picks: "季節 tasting menu、海鮮或魚料理、甜點", note: "已訂位；米其林一星，菜單會依季節變動。" },
+        { name: "Mariage Frères Marais", query: "Mariage Frères Marais Paris", rating: "Google 約 4.3", picks: "招牌茶、茶香甜點、下午茶組合", note: "適合瑪黑區散步中途休息或買茶葉伴手禮。" },
+        { name: "Une Glace à Paris", query: "Une Glace à Paris Marais", rating: "Google 約 4.6", picks: "開心果冰淇淋、巧克力 sorbet、季節冰品", note: "瑪黑區散步甜點備案，適合外帶邊走邊吃。" },
+        { name: "La Glacerie Paris", query: "La Glacerie Paris Marais", rating: "Google 約 4.5", picks: "冰淇淋、法式冰品甜點、季節口味", note: "若 Une Glace 排隊太久，可當同區冰品備案。" },
+        { name: "Bistrotters", query: "Bistrotters 9 Rue Decrès Paris", rating: "Google 約 4.7", picks: "晚餐套餐、鴨胸或牛排、法式甜點", note: "14 區小酒館；表格列 €39/47，餐費未放入分攤總表。" }
+      ],
+      day3: [
+        { name: "Case", query: "Case 37 Rue Etienne Marcel Tours", rating: "Google 約 4.6", picks: "三道式套餐、當季魚肉主菜、甜點", note: "已訂位 20:00；抵達 Tours 後不用再找餐廳。" },
+        { name: "La Deuvalière", query: "La Deuvalière Tours", rating: "Google 約 4.6", picks: "季節法式套餐、魚料理、甜點", note: "Tours 晚餐備案；若 Case 時間有變可查空位。" }
+      ],
+      day4: [
+        { name: "Breizh Café Rennes", query: "Breizh Café Rennes", rating: "Google 約 4.7", picks: "蕎麥 galette、焦糖鹽奶油可麗餅、蘋果酒", note: "雷恩午餐 / 下午茶；抵達時間偏晚，點餐要俐落。" },
+        { name: "FIDELIS", query: "FIDELIS 10 Rue Jacques Cartier Saint-Malo", rating: "Google 約 4.6", picks: "生蠔、當日魚、藍龍蝦或海鮮主菜", note: "已訂位 by Alan & Ivy；表格列 €36 set menu。" },
+        { name: "Boulangerie de la Scellerie", query: "Boulangerie de la Scellerie Tours", rating: "Google 約 4.4", picks: "可頌、法棍、三明治", note: "Tours 早餐備案，適合買了直接上車。" }
+      ],
+      day5: [
+        { name: "La Mère Poulard", query: "La Mère Poulard Mont Saint-Michel", rating: "Google 約 3.5", picks: "招牌舒芙蕾歐姆蛋、蘋果甜點", note: "名氣大但評價分歧；想體驗經典可選，排隊久就換備案。" },
+        { name: "Restaurant La Confiance", query: "Restaurant La Confiance Mont Saint-Michel", rating: "Google 約 4.3", picks: "可麗餅、淡菜、簡餐", note: "聖米歇爾山午餐備案，適合比 La Mère Poulard 輕鬆一點。" },
+        { name: "Mont Burger", query: "Mont Burger Mont Saint-Michel", rating: "Google 約 4.4", picks: "漢堡、薯條、外帶飲料", note: "趕時間或多人排隊分流時最實用。" },
+        { name: "Les Régates", query: "Les Régates Le Havre", rating: "Google 約 4.3", picks: "海鮮拼盤、烤魚、淡菜", note: "飯店步行約 4 分鐘，已訂位 20:00。" },
+        { name: "La Maison du Pain", query: "La Maison du Pain Saint-Malo", rating: "Google 約 4.4", picks: "可頌、法棍、酥皮點心", note: "Saint-Malo 早餐備案；可搭 Bordier 奶油。" }
+      ],
+      day6: [
+        { name: "Pollen", query: "Pollen Honfleur", rating: "Google 約 4.8", picks: "早午餐盤、咖啡、甜點", note: "Honfleur 早餐首選之一，適合老港散步前後。" },
+        { name: "Le Brunch Café", query: "Le Brunch Café Honfleur", rating: "Google 約 4.7", picks: "Brunch plate、蛋料理、鬆餅", note: "Honfleur 早餐備案，行程時間不夠時可彈性調整。" },
+        { name: "Lou Cabana", query: "Lou Cabana Honfleur", rating: "Google 約 4.6", picks: "咖啡、早午餐、甜點", note: "Honfleur 備案；如果前兩家客滿可查這間。" },
+        { name: "La Couronne", query: "La Couronne Rouen restaurant", rating: "Google 約 4.3", picks: "Canard à la rouennaise、sole meunière、tarte Tatin", note: "已訂位 12:30；no-show 罰 €105，務必抓準抵達時間。" },
+        { name: "Ancien Hôtel Baudy", query: "Ancien Hôtel Baudy Giverny", rating: "Google 約 4.2", picks: "諾曼第料理、鴨肉或魚料理、蘋果甜點", note: "Giverny 備案；適合想坐下吃一餐但會佔時間。" },
+        { name: "Au Coin du Pain'tre", query: "Au Coin du Pain'tre Giverny", rating: "Google 約 4.6", picks: "三明治、可頌、咖啡", note: "Giverny 快速補給選項，不要壓縮莫內花園時間。" },
+        { name: "Gourmandises de Giverny", query: "Gourmandises de Giverny", rating: "Google 約 4.3", picks: "可麗餅、冰淇淋、咖啡", note: "Giverny 甜點 / 小休備案。" },
+        { name: "Le Plomb du Cantal", query: "Le Plomb du Cantal Paris Montparnasse", rating: "Google 約 4.4", picks: "Aligot、truffade、香腸或牛排", note: "回巴黎後的晚餐備案；牽絲 Aligot 很有特色。" }
+      ],
+      day7: [
+        { name: "Café Saint-Régis", query: "Café Saint-Régis Paris Île Saint-Louis", rating: "Google 約 4.3", picks: "班尼迪克蛋、croque monsieur、洋蔥湯", note: "島上早餐 / 早午餐，地點方便但尖峰可能要等。" },
+        { name: "La Parisienne", query: "La Parisienne Paris Île Saint-Louis bakery", rating: "Google 約 4.3", picks: "可頌、法棍、pain au chocolat", note: "可順路買麵包，適合搭配島上散步。" },
+        { name: "Ha Noi 1988 Sao Vang", query: "Ha Noi 1988 Sao Vang Paris", rating: "Google 約 4.8", picks: "北越河粉、炸春捲、越式涼拌", note: "已訂位 12:00；中午吃清爽一點，晚上留給遊船。" },
+        { name: "Yann Couvreur", query: "Yann Couvreur Paris", rating: "Google 約 4.3", picks: "千層酥、狐狸造型甜點、季節水果塔", note: "巴黎甜點備案；適合買外帶分食。" },
+        { name: "Jacques Genin", query: "Jacques Genin Paris", rating: "Google 約 4.5", picks: "焦糖、pâte de fruit、熱巧克力", note: "甜點備案；若要買伴手禮比內用更省時間。" },
+        { name: "La Maison d'Isabelle", query: "La Maison d'Isabelle Paris", rating: "Google 約 4.4", picks: "可頌、pain au chocolat、法棍", note: "左岸麵包店備案；買了可以邊走邊吃。" },
+        { name: "Pierre Hermé", query: "Pierre Hermé Paris", rating: "Google 約 4.4", picks: "Ispahan、馬卡龍、季節甜點", note: "經典伴手禮與甜點備案，店點很多，點連結看附近分店。" },
+        { name: "Berthillon", query: "Berthillon Paris Île Saint-Louis", rating: "Google 約 4.4", picks: "冰淇淋、sorbet、黑巧克力或水果口味", note: "聖路易島經典冰淇淋，排隊長就視時間取捨。" },
+        { name: "Ducasse sur Seine", query: "Ducasse sur Seine Port Debilly Paris", rating: "Google 約 4.3", picks: "晚餐遊船套餐、季節魚肉主菜、甜點", note: "已預訂；19:15 前抵達，Smart Casual。" }
+      ],
+      day8: [
+        { name: "Cédric Grolet Opéra", query: "Cédric Grolet Opéra Paris", rating: "Google 約 4.0", picks: "水果造型甜點、可頌、viennoiseries", note: "早餐 €50 / brunch €65；排隊和價格都要心理準備。" },
+        { name: "Café Bohème Edgar Quinet", query: "Café Bohème Edgar Quinet Paris", rating: "Google 約 4.4", picks: "早午餐、蛋料理、咖啡", note: "飯店附近早餐選項，表格列 €13.5。" },
+        { name: "TYerry's Café", query: "TYerry's Café Paris", rating: "Google 約 4.7", picks: "Brunch、鬆餅、咖啡", note: "Outlet 日早餐備案；出發前不要吃太慢。" },
+        { name: "Tripletta Gaîté", query: "Tripletta Gaîté Paris", rating: "Google 約 4.3", picks: "拿坡里披薩、burrata、tiramisu", note: "回飯店附近晚餐備案，適合購物日後輕鬆吃。" },
+        { name: "Jiayan", query: "Jiayan Paris Montparnasse", rating: "Google 約 4.5", picks: "中式熱菜、麵飯類、家庭分享菜", note: "想換亞洲口味時的飯店附近備案。" }
+      ],
+      day9: [
+        { name: "Ladurée Champs-Élysées", query: "Ladurée Champs-Élysées Paris", rating: "Google 約 4.2", picks: "馬卡龍、法式吐司、歐姆蛋", note: "香榭大道旗艦店早餐；用餐後步行到凱旋門很順。" },
+        { name: "Madame Brasserie", query: "Madame Brasserie Eiffel Tower Paris", rating: "Google 約 4.3", picks: "鐵塔午餐套餐、魚肉主菜、甜點", note: "已付款 €495.6；11:30 抵達南腳安檢比較穩。" },
+        { name: "Balcon Galeries Lafayette", query: "Balcon Galeries Lafayette Paris", rating: "Google 約 4.1", picks: "雞尾酒、法式主菜、甜點", note: "拉法葉屋頂晚餐 20:00 已預約，依逛街狀態調整。" }
+      ],
+      day10: [
+        { name: "La Régalade Saint-Honoré", query: "La Régalade Saint-Honoré Paris", rating: "Google 約 4.4", picks: "午間套餐、招牌 terrine、舒芙蕾或當日甜點", note: "午餐 confirmed；羅浮宮結束後步行約 10 分鐘。" },
+        { name: "L'Assiette", query: "L'Assiette Paris 14 restaurant", rating: "Google 約 4.5", picks: "Cassoulet、foie gras、Grand Marnier soufflé", note: "14 區米其林風格小館，晚餐訂位確認。" }
+      ]
+    };
+    const dayMapStops = {
+      day1: [
+        { label: "桃園機場 TPE", query: "Taiwan Taoyuan International Airport Terminal 2" },
+        { label: "戴高樂機場 CDG", query: "Charles de Gaulle Airport Paris" }
+      ],
+      day2: [
+        { label: "CDG", query: "Charles de Gaulle Airport Paris" },
+        { label: "voco Paris", query: "voco Paris Montparnasse" },
+        { label: "Aldehyde", query: "Aldehyde 5 Rue du Pont Louis-Philippe Paris" },
+        { label: "瑪黑區", query: "Place des Vosges Paris" },
+        { label: "Bistrotters", query: "Bistrotters 9 Rue Decrès Paris" }
+      ],
+      day3: [
+        { label: "voco Paris", query: "voco Paris Montparnasse" },
+        { label: "凡爾賽宮", query: "Château de Versailles France" },
+        { label: "沙特爾主教座堂", query: "Chartres Cathedral France" },
+        { label: "Tours 飯店", query: "Hilton Garden Inn Tours Centre" },
+        { label: "Case", query: "Case 37 Rue Etienne Marcel Tours" }
+      ],
+      day4: [
+        { label: "Tours 飯店", query: "Hilton Garden Inn Tours Centre" },
+        { label: "舍濃梭堡", query: "Château de Chenonceau France" },
+        { label: "雷恩", query: "Rennes France" },
+        { label: "聖馬洛飯店", query: "Hôtel Mercure Saint-Malo Front de Mer" },
+        { label: "FIDELIS", query: "FIDELIS 10 Rue Jacques Cartier Saint-Malo" }
+      ],
+      day5: [
+        { label: "Saint-Malo", query: "Hôtel Mercure Saint-Malo Front de Mer" },
+        { label: "聖米歇爾山", query: "Mont Saint-Michel Abbey France" },
+        { label: "Château du Breuil", query: "La Spiriterie Française Château du Breuil" },
+        { label: "Étretat", query: "Étretat cliffs France" },
+        { label: "Le Havre 飯店", query: "Hilton Garden Inn Le Havre Centre" },
+        { label: "Les Régates", query: "Les Régates Le Havre" }
+      ],
+      day6: [
+        { label: "Le Havre", query: "Hilton Garden Inn Le Havre Centre" },
+        { label: "Honfleur", query: "Vieux Bassin Honfleur France" },
+        { label: "Rouen", query: "Rouen Cathedral France" },
+        { label: "Giverny", query: "Fondation Monet in Giverny" },
+        { label: "voco Paris", query: "voco Paris Montparnasse" },
+        { label: "Le Plomb du Cantal", query: "Le Plomb du Cantal Paris Montparnasse" }
+      ],
+      day7: [
+        { label: "voco Paris", query: "voco Paris Montparnasse" },
+        { label: "聖路易島", query: "Île Saint-Louis Paris" },
+        { label: "巴黎聖母院", query: "Cathédrale Notre-Dame de Paris" },
+        { label: "Ha Noi 1988", query: "Ha Noi 1988 Sao Vang Paris" },
+        { label: "孚日廣場", query: "Place des Vosges Paris" },
+        { label: "Port Debilly", query: "Port Debilly Paris" }
+      ],
+      day8: [
+        { label: "voco Paris", query: "voco Paris Montparnasse" },
+        { label: "Cédric Grolet Opéra", query: "Cédric Grolet Opéra Paris" },
+        { label: "La Vallée Village", query: "La Vallée Village Serris France" },
+        { label: "voco Paris", query: "voco Paris Montparnasse" },
+        { label: "Tripletta Gaîté", query: "Tripletta Gaîté Paris" }
+      ],
+      day9: [
+        { label: "voco Paris", query: "voco Paris Montparnasse" },
+        { label: "Ladurée", query: "Ladurée Champs-Élysées Paris" },
+        { label: "凱旋門", query: "Arc de Triomphe Paris" },
+        { label: "艾菲爾鐵塔", query: "Eiffel Tower Paris" },
+        { label: "Chanel Rue Cambon", query: "Chanel 19 Rue Cambon Paris" },
+        { label: "拉法葉", query: "Galeries Lafayette Haussmann Paris" }
+      ],
+      day10: [
+        { label: "voco Paris", query: "voco Paris Montparnasse" },
+        { label: "羅浮宮", query: "Louvre Museum Paris" },
+        { label: "La Régalade", query: "La Régalade Saint-Honoré Paris" },
+        { label: "皇家宮殿", query: "Palais Royal Paris" },
+        { label: "Le Bon Marché", query: "Le Bon Marché Paris" },
+        { label: "L'Assiette", query: "L'Assiette Paris 14 restaurant" }
+      ],
+      day11: [
+        { label: "voco Paris", query: "voco Paris Montparnasse" },
+        { label: "CDG", query: "Charles de Gaulle Airport Paris" },
+        { label: "桃園機場 TPE", query: "Taiwan Taoyuan International Airport" }
+      ]
+    };
+    const stopCoordinates = {
+      "Taiwan Taoyuan International Airport Terminal 2": [25.0777, 121.2328],
+      "Taiwan Taoyuan International Airport": [25.0777, 121.2328],
+      "Charles de Gaulle Airport Paris": [49.0097, 2.5479],
+      "voco Paris Montparnasse": [48.838, 2.3227],
+      "Aldehyde 5 Rue du Pont Louis-Philippe Paris": [48.8555, 2.3556],
+      "Place des Vosges Paris": [48.8556, 2.3655],
+      "Bistrotters 9 Rue Decrès Paris": [48.8355, 2.3174],
+      "Château de Versailles France": [48.8049, 2.1204],
+      "Chartres Cathedral France": [48.4475, 1.487],
+      "Hilton Garden Inn Tours Centre": [47.3945, 0.6847],
+      "Case 37 Rue Etienne Marcel Tours": [47.3927, 0.686],
+      "Château de Chenonceau France": [47.3249, 1.0703],
+      "Rennes France": [48.1173, -1.6778],
+      "Hôtel Mercure Saint-Malo Front de Mer": [48.6501, -2.0205],
+      "FIDELIS 10 Rue Jacques Cartier Saint-Malo": [48.6494, -2.0252],
+      "Mont Saint-Michel Abbey France": [48.6361, -1.5115],
+      "La Spiriterie Française Château du Breuil": [49.2286, 0.218],
+      "Étretat cliffs France": [49.707, 0.205],
+      "Hilton Garden Inn Le Havre Centre": [49.489, 0.102],
+      "Les Régates Le Havre": [49.4886, 0.1032],
+      "Vieux Bassin Honfleur France": [49.4201, 0.2334],
+      "Rouen Cathedral France": [49.4402, 1.095],
+      "Fondation Monet in Giverny": [49.0754, 1.5339],
+      "Le Plomb du Cantal Paris Montparnasse": [48.8422, 2.3229],
+      "Île Saint-Louis Paris": [48.8518, 2.3573],
+      "Cathédrale Notre-Dame de Paris": [48.853, 2.3499],
+      "Ha Noi 1988 Sao Vang Paris": [48.8496, 2.3522],
+      "Port Debilly Paris": [48.8617, 2.2948],
+      "Cédric Grolet Opéra Paris": [48.8705, 2.3333],
+      "La Vallée Village Serris France": [48.8549, 2.7838],
+      "Tripletta Gaîté Paris": [48.8392, 2.3236],
+      "Ladurée Champs-Élysées Paris": [48.8702, 2.3077],
+      "Arc de Triomphe Paris": [48.8738, 2.295],
+      "Eiffel Tower Paris": [48.8584, 2.2945],
+      "Chanel 19 Rue Cambon Paris": [48.8687, 2.3265],
+      "Galeries Lafayette Haussmann Paris": [48.8721, 2.332],
+      "Louvre Museum Paris": [48.8606, 2.3376],
+      "La Régalade Saint-Honoré Paris": [48.8617, 2.341],
+      "Palais Royal Paris": [48.8635, 2.3377],
+      "Le Bon Marché Paris": [48.8511, 2.3255],
+      "L'Assiette Paris 14 restaurant": [48.8325, 2.317]
+    };
+
+    function clean(text) {
+      return String(text || "");
+    }
+
+    function escapeHtml(text) {
+      return clean(text)
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#039;");
+    }
+
+    function compact(text, max = 92) {
+      const value = clean(text).replace(/\s+/g, " ").trim();
+      return value.length > max ? `${value.slice(0, max - 1)}…` : value;
+    }
+
+    function iconFor(event) {
+      const value = `${event.title || ""} ${event.detail || ""} ${event.tag || ""}`;
+      if (/metro|train|RER|地鐵|火車|電車/i.test(value)) return { mark: "🚆", label: "軌道交通" };
+      if (/櫃台|行李托運|托運|登機手續/i.test(value)) return { mark: "🧳", label: "登機 / 行李" };
+      if (/起飛|班機|登機|flight/i.test(value)) return { mark: "✈", label: "機場 / 飛行" };
+      if (/包車|車程|接送|出發|前往|drive|transfer|move/i.test(value)) return { mark: "🚗", label: "交通移動" };
+      if (/飛機|通關|機場|CDG|TPE|airport/i.test(value)) return { mark: "✈", label: "機場 / 飛行" };
+      if (/午餐|晚餐|早餐|餐|dinner|lunch|breakfast/i.test(value)) return { mark: "🍽", label: "餐食" };
+      if (/購物|精品|Outlet|Chanel|採買|shopping/i.test(value)) return { mark: "🛍", label: "購物" };
+      if (/飯店|入住|Check|hotel/i.test(value)) return { mark: "🏨", label: "住宿" };
+      if (/羅浮|博物|museum/i.test(value)) return { mark: "🖼", label: "博物館" };
+      if (/宮|城堡|修道院|聖母院|教堂|palace|chateau|abbey/i.test(value)) return { mark: "🏰", label: "景點" };
+      if (/散步|花園|海岸|拍照|walk|garden|coast|photo/i.test(value)) return { mark: "🚶", label: "散步 / 拍照" };
+      return { mark: "📍", label: "一般行程" };
+    }
+
+    function chipsFor(day) {
+      const text = `${day.title} ${day.subtitle} ${day.route}`;
+      const chips = [];
+      if (/餐|food|午餐|晚餐|早餐|Aldehyde|Ducasse|Brasserie/i.test(text)) chips.push("美食饗宴");
+      if (/購物|Outlet|精品|Chanel|Bon Marché|拉法葉/i.test(text)) chips.push("購物天堂");
+      if (/車|RER|地鐵|CDG|TPE|出發|transfer/i.test(text)) chips.push("交通順暢");
+      if (/宮|城堡|羅浮|聖母院|修道院|花園|Giverny/i.test(text)) chips.push("文化名勝");
+      if (/海|Saint-Malo|Étretat|Le Havre|Mont/i.test(text)) chips.push("海岸風景");
+      if (!chips.length) chips.push("高效順暢", "美食散策", "彈性安排");
+      return [...new Set(chips)].slice(0, 4);
+    }
+
+    function visualTilesFor(day) {
+      const stopEvents = day.events.filter((event) => !/drive|move|transfer|metro|train/i.test(event.tag || ""));
+      const source = stopEvents.length ? stopEvents : day.events;
+      return source.slice(0, 4).map((event) => event.title);
+    }
+
+    function posterDetail(detail, fullDetail) {
+      const summary = clean(detail).replace(/\s+/g, " ").trim();
+      const full = clean(fullDetail || detail).trim();
+      const hasExcelDetail = fullDetail && full !== summary;
+      if (!hasExcelDetail && summary.length <= 64) {
+        return `<p class="poster-event-detail">${escapeHtml(summary)}</p>`;
+      }
+      return `
+        <details class="poster-event-detail">
+          <summary>
+            <span>${escapeHtml(compact(summary, 58))}</span>
+            <span class="detail-toggle" aria-hidden="true"></span>
+          </summary>
+          <p>${escapeHtml(full)}</p>
+        </details>
+      `;
+    }
+
+    function posterRows(day) {
+      return day.events.map((event) => {
+        const icon = iconFor(event);
+        return `
+          <div class="poster-row">
+            <div class="poster-time">${escapeHtml(event.time)}</div>
+            <div class="poster-icon" title="${escapeHtml(icon.label)}" aria-label="${escapeHtml(icon.label)}">${escapeHtml(icon.mark)}</div>
+            <div>
+              <p class="poster-event-title">${escapeHtml(event.title)}</p>
+              ${posterDetail(event.detail, event.fullDetail)}
+            </div>
+          </div>
+        `;
+      }).join("");
+    }
+
+    function posterSideList(items, max = 3) {
+      const source = (items && items.length ? items : ["表格未列特別資訊。"]).slice(0, max);
+      return source.map((item) => {
+        const value = clean(item).trim();
+        const [head, ...rest] = value.split(/[：:]/);
+        const hasRest = rest.length > 0;
+        if (hasRest) {
+          return `<li><b>${escapeHtml(head)}</b>${escapeHtml(rest.join("：").trim())}</li>`;
+        }
+        return `<li>${escapeHtml(value)}</li>`;
+      }).join("");
+    }
+
+    function mapSearchLink(item) {
+      const query = item.query || item.name;
+      return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(query)}`;
+    }
+
+    function googleRouteLink(stops, travelMode = "driving") {
+      if (!stops.length) return "https://www.google.com/maps";
+      if (stops.length === 1) return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(stops[0].query)}`;
+      const origin = stops[0].query;
+      const destination = stops[stops.length - 1].query;
+      const waypointText = stops.slice(1, -1).map((stop) => stop.query).join("|");
+      const params = new URLSearchParams({
+        api: "1",
+        origin,
+        destination,
+        travelmode: travelMode
+      });
+      if (waypointText) params.set("waypoints", waypointText);
+      return `https://www.google.com/maps/dir/?${params.toString()}`;
+    }
+
+    function googleMapEmbedLink(stops) {
+      const focusStops = stops.length > 5 ? stops.slice(0, 5) : stops;
+      const query = focusStops.length > 1
+        ? focusStops.map((stop) => stop.query).join(" to ")
+        : (focusStops[0]?.query || "Paris France");
+      return `https://maps.google.com/maps?hl=zh-TW&output=embed&q=${encodeURIComponent(query)}`;
+    }
+
+    function stopCoord(stop) {
+      const coord = stopCoordinates[stop.query] || stopCoordinates[stop.label];
+      return coord ? { lat: coord[0], lng: coord[1] } : null;
+    }
+
+    function distanceKm(a, b) {
+      if (!a || !b) return null;
+      const radius = 6371;
+      const toRad = (value) => value * Math.PI / 180;
+      const dLat = toRad(b.lat - a.lat);
+      const dLng = toRad(b.lng - a.lng);
+      const lat1 = toRad(a.lat);
+      const lat2 = toRad(b.lat);
+      const h = Math.sin(dLat / 2) ** 2 + Math.cos(lat1) * Math.cos(lat2) * Math.sin(dLng / 2) ** 2;
+      return radius * 2 * Math.atan2(Math.sqrt(h), Math.sqrt(1 - h));
+    }
+
+    function mapIconForStop(stop) {
+      const text = `${stop.label} ${stop.query}`;
+      if (/Airport|機場|CDG|TPE/i.test(text)) return "✈";
+      if (/voco|Hilton|Mercure|飯店|Hotel/i.test(text)) return "🏨";
+      if (/Aldehyde|Bistrotters|Case|FIDELIS|Régalade|Assiette|Ladurée|Brasserie|Regates|Plomb|Tripletta/i.test(text)) return "🍽";
+      if (/Village|Galeries|Chanel|Bon Marché|Outlet/i.test(text)) return "🛍";
+      if (/Versailles|Chenonceau|Mont Saint|Cathedral|Notre|Louvre|Palais|Eiffel|Arc/i.test(text)) return "🏛";
+      if (/Étretat|Honfleur|Giverny|Vosges|Debilly|Saint-Louis|Rennes|Chartres|Tours/i.test(text)) return "📍";
+      return "📌";
+    }
+
+    function projectedStops(stops) {
+      const mapped = stops.map((stop, index) => ({ ...stop, index, coord: stopCoord(stop) })).filter((stop) => stop.coord);
+      if (!mapped.length) return [];
+      const lats = mapped.map((stop) => stop.coord.lat);
+      const lngs = mapped.map((stop) => stop.coord.lng);
+      let minLat = Math.min(...lats);
+      let maxLat = Math.max(...lats);
+      let minLng = Math.min(...lngs);
+      let maxLng = Math.max(...lngs);
+      if (Math.abs(maxLat - minLat) < 0.02) {
+        minLat -= 0.01;
+        maxLat += 0.01;
+      }
+      if (Math.abs(maxLng - minLng) < 0.02) {
+        minLng -= 0.01;
+        maxLng += 0.01;
+      }
+      const pad = 10;
+      return mapped.map((stop, index) => {
+        const x = pad + ((stop.coord.lng - minLng) / (maxLng - minLng)) * (100 - pad * 2);
+        const y = pad + ((maxLat - stop.coord.lat) / (maxLat - minLat)) * (100 - pad * 2);
+        const previous = index > 0 ? mapped[index - 1].coord : null;
+        const distance = previous ? distanceKm(previous, stop.coord) : null;
+        return { ...stop, x, y, distance };
+      });
+    }
+
+    function routePath(points) {
+      if (!points.length) return "";
+      return points.reduce((path, point, index) => {
+        const segment = `${point.x.toFixed(2)} ${point.y.toFixed(2)}`;
+        return index === 0 ? `M ${segment}` : `${path} L ${segment}`;
+      }, "");
+    }
+
+    function distanceText(distance) {
+      if (!distance) return "起點";
+      if (distance >= 1000) return `前站約 ${Math.round(distance).toLocaleString()} km`;
+      if (distance >= 100) return `前站約 ${Math.round(distance)} km`;
+      if (distance >= 10) return `前站約 ${distance.toFixed(1)} km`;
+      return `前站約 ${distance.toFixed(1)} km`;
+    }
+
+    function dayMap(day) {
+      const stops = dayMapStops[day.id] || [];
+      if (!stops.length) return "";
+      const routeUrl = googleRouteLink(stops, /day1|day11/.test(day.id) ? "transit" : "driving");
+      const points = projectedStops(stops);
+      const embedUrl = googleMapEmbedLink(stops);
+      return `
+        <section class="day-map" aria-label="當日 Google Maps 地理位置">
+          <div class="map-head">
+            <h4>當日地圖</h4>
+            <a class="map-link" href="${escapeHtml(routeUrl)}" target="_blank" rel="noopener noreferrer">開啟 Google Maps</a>
+          </div>
+          <div class="route-poster">
+            <div class="map-card-list">
+              ${points.map((stop) => `
+                <article class="map-stop-card">
+                  <span class="map-stop-no">${stop.index + 1}</span>
+                  <span class="map-stop-thumb" data-icon="${escapeHtml(mapIconForStop(stop))}"></span>
+                  <span>
+                    <p class="map-stop-title">${escapeHtml(stop.label)}</p>
+                    <p class="map-stop-meta">${escapeHtml(distanceText(stop.distance))}</p>
+                  </span>
+                </article>
+              `).join("")}
+            </div>
+            <div class="map-live" aria-label="${escapeHtml(day.date)} ${escapeHtml(day.title)} Google Maps 地圖">
+              <iframe src="${escapeHtml(embedUrl)}" loading="lazy" referrerpolicy="no-referrer-when-downgrade" title="${escapeHtml(day.date)} ${escapeHtml(day.title)} Google Maps"></iframe>
+            </div>
+          </div>
+        </section>
+      `;
+    }
+
+    function restaurantCards(day) {
+      const items = restaurantGuide[day.id];
+      if (!items || !items.length) {
+        return posterSideList(day.food, 4);
+      }
+      return items.map((item, index) => `
+        <li class="restaurant-li">
+          <details class="restaurant-card"${index === 0 ? " open" : ""}>
+            <summary>
+              <span class="restaurant-name">
+                <a href="${escapeHtml(mapSearchLink(item))}" target="_blank" rel="noopener noreferrer">${escapeHtml(item.name)}</a>
+              </span>
+              <span class="restaurant-rating">${escapeHtml(item.rating)}</span>
+              <span class="restaurant-pick">${escapeHtml(compact(`推薦：${item.picks}`, 46))}</span>
+            </summary>
+            <div class="restaurant-more">
+              <span><b>推薦菜：</b>${escapeHtml(item.picks)}</span>
+              <span><b>備註：</b>${escapeHtml(item.note || "點餐廳名可查看最新 Google Maps 評分、營業時間與位置。")}</span>
+            </div>
+          </details>
+        </li>
+      `).join("");
+    }
+
+    function renderList(el, items, className) {
+      el.innerHTML = "";
+      const source = items && items.length ? items : ["表格未列特別資訊。"];
+      source.forEach((item) => {
+        const li = document.createElement("li");
+        if (className) li.className = className;
+        li.textContent = item;
+        el.appendChild(li);
+      });
+    }
+
+    function setActive(id) {
+      const day = data.days.find((item) => item.id === id) || data.days[0];
+      document.querySelectorAll(".day-button").forEach((button) => {
+        button.classList.toggle("active", button.dataset.id === day.id);
+      });
+      pageTitle.textContent = `${day.day}｜${day.title}`;
+      pageSubtitle.textContent = `${day.date} ${day.weekday}｜${day.subtitle}`;
+      const chips = chipsFor(day);
+      const tiles = visualTilesFor(day);
+      hero.innerHTML = `
+        <div class="poster">
+          <div class="poster-top">
+            <div>
+              <p class="script-title">One Day in</p>
+              <h3 class="poster-title">${escapeHtml(day.title)}</h3>
+              <p class="poster-subtitle">${escapeHtml(day.subtitle)}</p>
+            </div>
+            <div class="poster-mosaic" aria-label="行程視覺節點">
+              ${tiles.map((tile) => `<div class="mosaic-tile"><span>${escapeHtml(compact(tile, 28))}</span></div>`).join("")}
+            </div>
+          </div>
+          <div class="theme-row">
+            ${chips.map((chip) => `<span>${escapeHtml(chip)}</span>`).join("")}
+          </div>
+          <div class="info-strip">
+            <div class="strip-label">交通資訊</div>
+            <div class="strip-content">
+              <span>${escapeHtml(day.route)}</span>
+              <span>住宿：${escapeHtml(day.stay)}</span>
+              <span>節奏：${escapeHtml(day.pace)}</span>
+            </div>
+          </div>
+          <div class="poster-body">
+            <div class="poster-main">
+              <div class="poster-timeline">
+                ${posterRows(day)}
+              </div>
+            </div>
+            <div class="poster-side">
+              <div class="side-box">
+                <h4>餐廳精選</h4>
+                <ul>${restaurantCards(day)}</ul>
+              </div>
+              <div class="side-box">
+                <h4>費用 / 訂位</h4>
+                <ul>${posterSideList(day.costs, 3)}</ul>
+              </div>
+              <div class="side-box">
+                <h4>行程亮點</h4>
+                <ul>${posterSideList(day.alerts, 3)}</ul>
+              </div>
+            </div>
+            ${dayMap(day)}
+          </div>
+        </div>
+      `;
+      timeline.innerHTML = "";
+      day.events.forEach((event) => {
+        const item = document.createElement("article");
+        item.className = "timeline-item";
+        item.innerHTML = `
+          <div class="time">${clean(event.time)}</div>
+          <div>
+            <p class="event-title">${clean(event.title)}</p>
+            <p class="event-detail">${clean(event.detail)}</p>
+            <span class="tag">${clean(event.tag)}</span>
+          </div>
+        `;
+        timeline.appendChild(item);
+      });
+      eventCount.textContent = `${day.events.length} stops`;
+      renderList(foodList, day.food);
+      renderList(costList, day.costs, "cost");
+      renderList(alertList, day.alerts, "warn");
+      history.replaceState(null, "", `#${day.id}`);
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+
+    data.days.forEach((day) => {
+      const button = document.createElement("button");
+      button.type = "button";
+      button.className = "day-button";
+      button.dataset.id = day.id;
+      button.innerHTML = `
+        <span class="day-number">${day.date}</span>
+        <span>
+          <span class="day-name">${day.title}</span>
+          <span class="day-date">${day.weekday}｜${day.pace}</span>
+        </span>
+      `;
+      button.addEventListener("click", () => setActive(day.id));
+      menu.appendChild(button);
+    });
+
+    document.getElementById("expenseToggle").addEventListener("click", () => {
+      drawer.classList.toggle("open");
+      if (drawer.classList.contains("open")) {
+        drawer.scrollIntoView({ behavior: "smooth", block: "start" });
+      }
+    });
+
+    document.getElementById("printButton").addEventListener("click", () => window.print());
+
+    const initial = location.hash ? location.hash.slice(1) : data.days[0].id;
+    setActive(initial);
+  </script>
+</body>
+</html>
